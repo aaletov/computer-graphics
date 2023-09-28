@@ -1,13 +1,12 @@
 // Tell WebGL how to pull out the positions from the position
 // buffer into the vertexPosition attribute.
-export function setPositionAttribute(gl, buffers, programInfo) {
+export function setPositionAttribute(gl, programInfo) {
   const numComponents = 3; // pull out 2 values per iteration
   const type = gl.FLOAT; // the data in the buffer is 32bit floats
   const normalize = false; // don't normalize
   const stride = 0; // how many bytes to get from one set of values to the next
   // 0 = use type and numComponents above
   const offset = 0; // how many bytes inside the buffer to start from
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
   gl.vertexAttribPointer(
     programInfo.attribLocations.vertexPosition,
     numComponents,
@@ -21,13 +20,12 @@ export function setPositionAttribute(gl, buffers, programInfo) {
 
 // Tell WebGL how to pull out the colors from the color buffer
 // into the vertexColor attribute.
-export function setColorAttribute(gl, buffers, programInfo) {
+export function setColorAttribute(gl, programInfo) {
   const numComponents = 4;
   const type = gl.FLOAT;
   const normalize = false;
   const stride = 0;
   const offset = 0;
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
   gl.vertexAttribPointer(
     programInfo.attribLocations.vertexColor,
     numComponents,

@@ -1,23 +1,34 @@
-import { getDefaultShaderProgram } from './shader';
-import { initBuffers } from './buffers';
 import { mat4 } from 'gl-matrix';
+import { createProgram } from './program';
 import { setColorAttribute, setPositionAttribute } from './attributes';
 
-async function initLowLevel(gl) {
-  const defaultShaderProgram = await getDefaultShaderProgram(gl);
+export function tetrahedronAnimation(gl: WebGLRenderingContext) {
+  createProgram(gl).then((program) => {
+    let cubeRotation = 0.0;
+    let deltaTime = 0;
+    let then = 0;
+  
+    // Draw the scene repeatedly
+    function render(now: DOMHighResTimeStamp) {
+      now *= 0.001; // convert to seconds
+      deltaTime = now - then;
+      then = now;
+  
+      drawTetrahedron(gl, program.buffers, program.programInfo, cubeRotation);
+      cubeRotation += deltaTime;
+  
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  });
+}
 
-  const programInfo = {
-    program: defaultShaderProgram,
-    attribLocations: {
-      vertexPosition: gl.getAttribLocation(defaultShaderProgram, "aVertexPosition"),
-      vertexColor: gl.getAttribLocation(defaultShaderProgram, "aVertexColor"),
-    },
-    uniformLocations: {
-      projectionMatrix: gl.getUniformLocation(defaultShaderProgram, "uProjectionMatrix"),
-      modelViewMatrix: gl.getUniformLocation(defaultShaderProgram, "uModelViewMatrix"),
-    },
-  };
-
+function drawTetrahedron(
+  gl: WebGLRenderingContext,
+  buffers: any,
+  programInfo: any,
+  cubeRotation: any,
+) {
   // Now create an array of positions for the square.
   const positions = [
     // Front face
@@ -60,16 +71,7 @@ async function initLowLevel(gl) {
     20, 21, 22,
     20, 22, 23, // left
   ];
-
-  const buffers = initBuffers(gl, positions, faceColors, indices);
-
-  return {
-    'buffers': buffers,
-    'programInfo': programInfo,
-  }
-}
-
-function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {  
+  
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -87,7 +89,8 @@ function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {
   // and 100 units away from the camera.
 
   const fieldOfView = (45 * Math.PI) / 180; // in radians
-  const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+  const canvas = <HTMLCanvasElement> gl.canvas;
+  const aspect = canvas.clientWidth / canvas.clientHeight;
   const zNear = 0.1;
   const zFar = 100.0;
   const projectionMatrix = mat4.create();
@@ -129,11 +132,8 @@ function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
-  setPositionAttribute(gl, buffers, programInfo);
-  setColorAttribute(gl, buffers, programInfo);
-  // Tell WebGL which indices to use to index the vertices
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
+  setPositionAttribute(gl, programInfo);
+  setColorAttribute(gl, programInfo);
 
   // Tell WebGL to use our program when drawing
   gl.useProgram(programInfo.program);
@@ -150,6 +150,10 @@ function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {
     modelViewMatrix,
   );
 
+  buffers.position.load(positions);
+  buffers.color.load(faceColors);
+  buffers.index.load(indices);
+
   {
     const vertexCount = 36;
     const type = gl.UNSIGNED_SHORT;
@@ -157,25 +161,3 @@ function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
   }
 };
-
-export function tetrahedron(gl) {
-  initLowLevel(gl).then((lowLevel) => {
-    let cubeRotation = 0.0;
-    let deltaTime = 0;
-    let then = 0;
-  
-    // Draw the scene repeatedly
-    function render(now) {
-      now *= 0.001; // convert to seconds
-      deltaTime = now - then;
-      then = now;
-  
-      drawTetrahedron(gl, lowLevel.buffers, lowLevel.programInfo, cubeRotation);
-      cubeRotation += deltaTime;
-  
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-  });
-}
-
