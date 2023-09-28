@@ -1,47 +1,75 @@
+import { getDefaultShaderProgram } from './shader';
+import { initBuffers } from './buffers';
 import { mat4 } from 'gl-matrix';
+import { setColorAttribute, setPositionAttribute } from './attributes';
 
-// Tell WebGL how to pull out the positions from the position
-// buffer into the vertexPosition attribute.
-function setPositionAttribute(gl, buffers, programInfo) {
-  const numComponents = 3; // pull out 2 values per iteration
-  const type = gl.FLOAT; // the data in the buffer is 32bit floats
-  const normalize = false; // don't normalize
-  const stride = 0; // how many bytes to get from one set of values to the next
-  // 0 = use type and numComponents above
-  const offset = 0; // how many bytes inside the buffer to start from
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
-  gl.vertexAttribPointer(
-    programInfo.attribLocations.vertexPosition,
-    numComponents,
-    type,
-    normalize,
-    stride,
-    offset,
-  );
-  gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+async function initLowLevel(gl) {
+  const defaultShaderProgram = await getDefaultShaderProgram(gl);
+
+  const programInfo = {
+    program: defaultShaderProgram,
+    attribLocations: {
+      vertexPosition: gl.getAttribLocation(defaultShaderProgram, "aVertexPosition"),
+      vertexColor: gl.getAttribLocation(defaultShaderProgram, "aVertexColor"),
+    },
+    uniformLocations: {
+      projectionMatrix: gl.getUniformLocation(defaultShaderProgram, "uProjectionMatrix"),
+      modelViewMatrix: gl.getUniformLocation(defaultShaderProgram, "uModelViewMatrix"),
+    },
+  };
+
+  // Now create an array of positions for the square.
+  const positions = [
+    // Front face
+    -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+    // Back face
+    -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+    // Top face
+    -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+    // Bottom face
+    -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+    // Right face
+    1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+    // Left face
+    -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+  ];
+
+  const faceColors = [
+    [1.0, 1.0, 1.0, 1.0], // Front face: white
+    [1.0, 0.0, 0.0, 1.0], // Back face: red
+    [0.0, 1.0, 0.0, 1.0], // Top face: green
+    [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
+    [1.0, 1.0, 0.0, 1.0], // Right face: yellow
+    [1.0, 0.0, 1.0, 1.0], // Left face: purple
+  ];
+
+  // This array defines each face as two triangles, using the
+  // indices into the vertex array to specify each triangle's
+  // position.
+  const indices = [
+    0, 1, 2,
+    0, 2, 3, // front
+    4, 5, 6,
+    4, 6, 7, // back
+    8, 9, 10,
+    8, 10, 11, // top
+    12, 13, 14,
+    12, 14, 15, // bottom
+    16, 17, 18,
+    16, 18, 19, // right
+    20, 21, 22,
+    20, 22, 23, // left
+  ];
+
+  const buffers = initBuffers(gl, positions, faceColors, indices);
+
+  return {
+    'buffers': buffers,
+    'programInfo': programInfo,
+  }
 }
 
-// Tell WebGL how to pull out the colors from the color buffer
-// into the vertexColor attribute.
-function setColorAttribute(gl, buffers, programInfo) {
-  const numComponents = 4;
-  const type = gl.FLOAT;
-  const normalize = false;
-  const stride = 0;
-  const offset = 0;
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-  gl.vertexAttribPointer(
-    programInfo.attribLocations.vertexColor,
-    numComponents,
-    type,
-    normalize,
-    stride,
-    offset,
-  );
-  gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
-}
-
-export function drawCube(gl, buffers, programInfo, cubeRotation) {  
+function drawTetrahedron(gl, buffers, programInfo, cubeRotation) {  
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -129,3 +157,25 @@ export function drawCube(gl, buffers, programInfo, cubeRotation) {
     gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
   }
 };
+
+export function tetrahedron(gl) {
+  initLowLevel(gl).then((lowLevel) => {
+    let cubeRotation = 0.0;
+    let deltaTime = 0;
+    let then = 0;
+  
+    // Draw the scene repeatedly
+    function render(now) {
+      now *= 0.001; // convert to seconds
+      deltaTime = now - then;
+      then = now;
+  
+      drawTetrahedron(gl, lowLevel.buffers, lowLevel.programInfo, cubeRotation);
+      cubeRotation += deltaTime;
+  
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  });
+}
+

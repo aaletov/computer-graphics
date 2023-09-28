@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useRef } from 'react';
-import { cube } from './cube'; 
+import { tetrahedron } from './webgl/tetrahedron';
 
 function Canvas() {
   const ref = useRef(null);
@@ -14,7 +14,7 @@ function Canvas() {
       return;
     }
 
-    cube(gl);
+    tetrahedron(gl);
   });
 
   return <canvas id="glcanvas" width="640" height="480" ref={ref}></canvas>
