@@ -52,9 +52,9 @@ function initShaderProgram(gl, vsSource, fsSource) {
 }
 
 export async function getDefaultShaderProgram(gl) {
-  const vsSourceResponse = await fetch('./cubeVertex.glsl');
+  const vsSourceResponse = await fetch('./shaders/rotating-cube-scene/vertex.glsl');
   const vsSource = await vsSourceResponse.text();
-  const fsSourceResponse = await fetch('./cubeFragment.glsl');
+  const fsSourceResponse = await fetch('./shaders/rotating-cube-scene/fragment.glsl');
   const fsSource = await fsSourceResponse.text();
   
   const shaderProgram = initShaderProgram(gl, vsSource, fsSource);

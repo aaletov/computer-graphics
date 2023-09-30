@@ -1,8 +1,8 @@
 import { mat4 } from 'gl-matrix';
-import { createProgram } from '../webgl/program';
-import { setColorAttribute, setPositionAttribute } from '../webgl/attributes';
+import { createProgram } from './program';
+import { setColorAttribute, setPositionAttribute } from './attributes';
 
-export function tetrahedronAnimation(gl: WebGLRenderingContext) {
+export function cubeAnimation(gl: WebGLRenderingContext) {
   createProgram(gl).then((program) => {
     let cubeRotation = 0.0;
     let deltaTime = 0;
@@ -14,7 +14,7 @@ export function tetrahedronAnimation(gl: WebGLRenderingContext) {
       deltaTime = now - then;
       then = now;
   
-      drawTetrahedron(gl, program.buffers, program.programInfo, cubeRotation);
+      drawCube(gl, program.buffers, program.programInfo, cubeRotation);
       cubeRotation += deltaTime;
   
       requestAnimationFrame(render);
@@ -23,7 +23,7 @@ export function tetrahedronAnimation(gl: WebGLRenderingContext) {
   });
 }
 
-function drawTetrahedron(
+function drawCube(
   gl: WebGLRenderingContext,
   buffers: any,
   programInfo: any,
