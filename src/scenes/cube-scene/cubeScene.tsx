@@ -1,9 +1,7 @@
-import './App.css';
 import { useEffect, useRef } from 'react';
-import { tetrahedronAnimation } from './figures/tetrahedron';
-import { CubeScene } from './scenes/cube-scene/cubeScene';
+import { drawCube, initCubeProgram } from './cube';
 
-function Canvas() {
+export function CubeScene() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
@@ -19,19 +17,10 @@ function Canvas() {
       );
       return;
     }
-
-    tetrahedronAnimation(gl);
+    initCubeProgram(gl).then((cubeProgram) => {
+      drawCube(gl, cubeProgram);
+    });
   });
 
   return <canvas id="glcanvas" width="640" height="480" ref={ref}></canvas>
 }
-
-function App() {
-  return (
-    <div className="App">
-      <CubeScene/>
-    </div>
-  );
-}
-
-export default App;

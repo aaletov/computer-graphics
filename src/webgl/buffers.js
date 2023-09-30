@@ -1,21 +1,3 @@
-// function initIndexBuffer(gl, indices) {
-
-
-//   return indexBuffer;
-// }
-
-// function initColorBuffer(gl, faceColors) {  
-
-
-//   return colorBuffer;
-// }
-
-// function initPositionBuffer(gl, positions) {
-
-
-//   return positionBuffer;
-// }
-
 export function createPositionBuffer(gl) {
   const glBuffer = gl.createBuffer();
   // Select the positionBuffer as the one to apply buffer
@@ -39,16 +21,16 @@ export function createColorBuffer(gl) {
   const glBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
 
-  function load(faceColors) {
-    // Convert the array of colors into a table for all the vertices.
-    var colors = [];
+  function load(colors) {
+    // // Convert the array of colors into a table for all the vertices.
+    // var colors = [];
     
-    for (var j = 0; j < faceColors.length; ++j) {
-      const c = faceColors[j];
-      // Repeat each color four times for the four vertices of the face
-      colors = colors.concat(c, c, c, c);
-    }
-
+    // for (var j = 0; j < faceColors.length; ++j) {
+    //   const c = faceColors[j];
+    //   // Repeat each color four times for the four vertices of the face
+    //   colors = colors.concat(c, c, c, c);
+    // }
+    // console.log(colors)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
   }
 

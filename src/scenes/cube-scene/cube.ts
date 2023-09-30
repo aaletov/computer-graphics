@@ -1,77 +1,72 @@
 import { mat4 } from 'gl-matrix';
-import { createProgram } from './program';
-import { setColorAttribute, setPositionAttribute } from './attributes';
+import { setCubePositionAttribute } from './attributes';
+import { getCubeShaderProgram } from './shader';
+import { initCubePositionBuffer } from './buffers';
 
-export function tetrahedronAnimation(gl: WebGLRenderingContext) {
-  createProgram(gl).then((program) => {
-    let cubeRotation = 0.0;
-    let deltaTime = 0;
-    let then = 0;
-  
-    // Draw the scene repeatedly
-    function render(now: DOMHighResTimeStamp) {
-      now *= 0.001; // convert to seconds
-      deltaTime = now - then;
-      then = now;
-  
-      drawTetrahedron(gl, program.buffers, program.programInfo, cubeRotation);
-      cubeRotation += deltaTime;
-  
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-  });
-}
+export async function initCubeProgram(gl: WebGLRenderingContext) {
+  const shaderProgram = await getCubeShaderProgram(gl);
+  const programInfo = {
+    program: shaderProgram,
+    attribLocations: {
+      vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+    },
+    uniformLocations: {
+      projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
+      modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
+    },
+  };
 
-function drawTetrahedron(
-  gl: WebGLRenderingContext,
-  buffers: any,
-  programInfo: any,
-  cubeRotation: any,
-) {
   // Now create an array of positions for the square.
   const positions = [
-    // Front face
-    -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
-    // Back face
-    -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
-    // Top face
-    -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
-    // Bottom face
-    -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
-    // Right face
-    1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
-    // Left face
-    -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    // Bottom
+    -1.0, -1.0, -1.0, 1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0, 1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+    -1.0, -1.0, 1.0, -1.0, -1.0, -1.0,
+    // Back
+    -1.0, -1.0, -1.0, -1.0, 1.0, -1.0,
+    -1.0, 1.0, -1.0, 1.0, 1.0, -1.0,
+    1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
+    // Left
+    -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
+    -1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    -1.0, 1.0, -1.0, -1.0, -1.0, -1.0,
+    // Transition
+    -1.0, -1.0, -1.0, 1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0, 1.0, 1.0, -1.0,
+    1.0, 1.0, -1.0, 1.0, 1.0, 1.0,
+    // Front
+    1.0, 1.0, 1.0, 1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0, -1.0, -1.0, 1.0,
+    -1.0, -1.0, 1.0, -1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    // Right
+    1.0, 1.0, 1.0, 1.0, 1.0, -1.0,
+    1.0, 1.0, -1.0, 1.0, -1.0, -1.0,
+    1.0, -1.0, -1.0, 1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0, 1.0, 1.0, 1.0,
+    // Top
+    1.0, 1.0, 1.0, -1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0, -1.0, 1.0, -1.0,
+    -1.0, 1.0, -1.0, 1.0, 1.0, -1.0,
+    1.0, 1.0, -1.0, 1.0, 1.0, 1.0,
   ];
 
-  const faceColors = [
-    [1.0, 1.0, 1.0, 1.0], // Front face: white
-    [1.0, 0.0, 0.0, 1.0], // Back face: red
-    [0.0, 1.0, 0.0, 1.0], // Top face: green
-    [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-    [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-    [1.0, 0.0, 1.0, 1.0], // Left face: purple
-  ];
+  const positionBuffer = initCubePositionBuffer(gl, positions);
+  return {
+    shaderProgram: shaderProgram,
+    positionBuffer: positionBuffer,
+    programInfo: programInfo,
+  };
+}
 
-  // This array defines each face as two triangles, using the
-  // indices into the vertex array to specify each triangle's
-  // position.
-  const indices = [
-    0, 1, 2,
-    0, 2, 3, // front
-    4, 5, 6,
-    4, 6, 7, // back
-    8, 9, 10,
-    8, 10, 11, // top
-    12, 13, 14,
-    12, 14, 15, // bottom
-    16, 17, 18,
-    16, 18, 19, // right
-    20, 21, 22,
-    20, 22, 23, // left
-  ];
-  
+export function drawCube(
+  gl: WebGLRenderingContext,
+  cubeProgram: any,
+) {
+  const cubeRotation = 0.030;
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -120,7 +115,7 @@ function drawTetrahedron(
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
-    cubeRotation * 0.7, // amount to rotate in radians
+    cubeRotation * 10.0, // amount to rotate in radians
     [0, 1, 0],
   ); // axis to rotate around (Y)
   mat4.rotate(
@@ -132,32 +127,27 @@ function drawTetrahedron(
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
-  setPositionAttribute(gl, programInfo);
-  setColorAttribute(gl, programInfo);
+  setCubePositionAttribute(gl, cubeProgram.programInfo);
 
   // Tell WebGL to use our program when drawing
-  gl.useProgram(programInfo.program);
+  gl.useProgram(cubeProgram.programInfo.program);
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
-    programInfo.uniformLocations.projectionMatrix,
+    cubeProgram.programInfo.uniformLocations.projectionMatrix,
     false,
     projectionMatrix,
   );
   gl.uniformMatrix4fv(
-    programInfo.uniformLocations.modelViewMatrix,
+    cubeProgram.programInfo.uniformLocations.modelViewMatrix,
     false,
     modelViewMatrix,
   );
 
-  buffers.position.load(positions);
-  buffers.color.load(faceColors);
-  buffers.index.load(indices);
-
   {
-    const vertexCount = 36;
+    const vertexCount = 54;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
-    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+    gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);
   }
 };
