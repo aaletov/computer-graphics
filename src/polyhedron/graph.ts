@@ -127,7 +127,7 @@ export class LineGraph extends AbstractGraph {
     
     for (let i = 0; i < edgesArr.length - 1; i++) {
       const edge: Edge = edgesArr[i];
-      for (let j = i; j < edgesArr.length; j++) {
+      for (let j = i + 1; j < edgesArr.length; j++) {
         const otherEdge: Edge = edgesArr[j];
         if (this.isPlainEdgesRelated(edge, otherEdge)) {
           this.addEdge(edge, otherEdge);
@@ -155,6 +155,7 @@ export class LineGraph extends AbstractGraph {
         related = true;
         return;
       }
+      set.add(vertex);
     });
     return related;
   }

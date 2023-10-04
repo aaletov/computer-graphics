@@ -15,6 +15,20 @@ function getMinimalLinkedGraph(lhs: Vertex, rhs: Vertex): Graph {
   return graph;
 }
 
+function getSquareGraph(vertices: Array<Array<Vertex>>): Graph {
+  const graph = new Graph();
+  vertices.forEach((row) => {
+    row.forEach((v) => {
+      graph.addVertex(v);
+    });
+  });
+  graph.addEdge(vertices[0][0], vertices[0][1]);
+  graph.addEdge(vertices[0][0], vertices[1][0]);
+  graph.addEdge(vertices[0][1], vertices[1][1]);
+  graph.addEdge(vertices[1][0], vertices[1][1]);
+  return graph;
+}
+
 describe("Graph", () => {
   let graph: Graph;
   describe("is null graph", () => {
@@ -73,6 +87,25 @@ describe("Graph", () => {
       expect(adj[0]).toEqual(expectedVertexB);
     });
   });
+
+  describe("is square graph", () => {
+    let graph: Graph;
+    const vertices = [
+      ["A", "B"],
+      ["C", "D"],
+    ];
+    beforeEach(() => {
+      graph = getSquareGraph(vertices);
+    });
+    test("root and leaf has two links", () => {
+      const rAdj: Array<Vertex> = graph.getAdjacent(vertices[0][0]);
+      const lAdj: Array<Vertex> = graph.getAdjacent(vertices[1][1]);
+      expect(rAdj.length).toEqual(2);
+      expect(rAdj.includes(vertices[0][1]) && rAdj.includes(vertices[1][0])).toEqual(true);
+      expect(lAdj.length).toEqual(2);
+      expect(lAdj.includes(vertices[0][1]) && lAdj.includes(vertices[1][0])).toEqual(true);
+    });
+  });
 });
 
 describe("Line graph", () => {
@@ -109,6 +142,43 @@ describe("Line graph", () => {
       expect(it).toEqual(1);
       const lineGraphRoot = lineGraph.getRoot() as Vertex;
       expect(lineGraphRoot).toEqual("A/B");
+    });
+  });
+  describe("original graph is square", () => {
+    const vertices = [
+      ["A", "B"],
+      ["C", "D"],
+    ];
+    beforeEach(() => {
+      originalGraph = getSquareGraph(vertices);
+    });
+    test("contains correct vertices", () => {
+      const lineGraph = new LineGraph(originalGraph);
+      const expectedAdj = new Map<Vertex, Set<Vertex>>([
+        ["A/B", new Set<Vertex>(["A/C", "B/D"])],
+        ["A/C", new Set<Vertex>(["A/B", "C/D"])],
+        ["B/D", new Set<Vertex>(["A/B", "C/D"])],
+        ["C/D", new Set<Vertex>(["B/D", "A/C"])],
+      ]);
+      const matched = new Map<Vertex, boolean>([
+        ["A/B", false],
+        ["A/C", false],
+        ["B/D", false],
+        ["C/D", false],
+      ]);
+      lineGraph.dfs((v: Vertex): void => {
+        expect(expectedAdj.has(v)).toEqual(true);
+        const expectedVAdj = expectedAdj.get(v) as Set<Vertex>;
+        const adj = new Set<Vertex>(lineGraph.getAdjacent(v));
+        let match = true;
+        adj.forEach((v: Vertex): void => {
+          match &&= expectedVAdj.has(v);
+        });
+        expectedVAdj.forEach((v: Vertex): void => {
+          match &&= adj.has(v);
+        });
+        expect(match).toEqual(true);
+      });
     });
   });
 });
