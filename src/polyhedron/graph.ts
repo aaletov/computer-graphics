@@ -1,7 +1,7 @@
 import { addEmitHelper } from "typescript";
 
-type Vertex = string;
-type Edge = string;
+export type Vertex = string;
+export type Edge = string;
 
 export abstract class AbstractGraph {
   protected readonly adj: Map<Vertex, Vertex[]>;
@@ -53,7 +53,7 @@ export abstract class AbstractGraph {
 
   dfs(callback: ITraversalCallback): void {
     if (this.root == null) {
-      throw new Error("Graph is empty");
+      return;
     }
     const visited = new Map<Vertex, boolean>();
     const adj: Map<Vertex, Vertex[]> = this.adj;
@@ -110,7 +110,7 @@ export class Graph extends AbstractGraph {
   };
 }
 
-class LineGraph extends AbstractGraph {
+export class LineGraph extends AbstractGraph {
   constructor(graph: Graph) {
     super();
     const edges = new Set<Edge>();
@@ -191,6 +191,6 @@ class LineGraph extends AbstractGraph {
   }
 }
 
-interface ITraversalCallback {
+export interface ITraversalCallback {
   (node: Vertex): void;
 }
