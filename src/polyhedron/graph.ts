@@ -114,9 +114,9 @@ export class LineGraph extends AbstractGraph {
   constructor(graph: Graph) {
     super();
     const edges = new Set<Edge>();
-    this.dfs((vertex: Vertex): void => {
-      this.getAdjacent(vertex).forEach((adjVertex: Vertex): void => {
-        edges.add(this.buildEdge(vertex, adjVertex));
+    graph.dfs((vertex: Vertex): void => {
+      graph.getAdjacent(vertex).forEach((adjVertex: Vertex): void => {
+        edges.add(graph.getEdge(vertex, adjVertex));
       })
     });
     let edgesArr = new Array<Edge>();

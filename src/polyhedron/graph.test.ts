@@ -73,4 +73,12 @@ describe("graph with two vertices", () => {
     expect(adj.length).toEqual(1);
     expect(adj[0]).toEqual(expectedVertexB);
   });
+  test("line graph has one node", () => {
+    const lineGraph = new LineGraph(graph);
+    let it = 0;
+    lineGraph.dfs((v: Vertex) => it++);
+    expect(it).toEqual(1);
+    const lineGraphRoot = lineGraph.getRoot() as Vertex;
+    expect(lineGraphRoot).toEqual("A/B");
+  });
 });
