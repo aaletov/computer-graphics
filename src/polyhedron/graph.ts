@@ -3,83 +3,60 @@ import { addEmitHelper } from "typescript";
 type Vertex = string;
 type Edge = string;
 
-interface IGraph {
-  addVertex(vertex: Vertex): void;
-  getEdge(lhs: Vertex, rhs: Vertex): Edge;
-  addEdge(lhs: Vertex, rhs: Vertex): Edge;
-  addEdges(lhs: Vertex, ...more: Vertex[]): Edge[];
-  getAdjacent(vertex: Vertex): Vertex[];
-  dfs(callback: ITraversalCallback): void;
-}
+export abstract class AbstractGraph {
+  protected readonly adj: Map<Vertex, Vertex[]>;
+  protected root: Vertex | null;
 
-interface ITraversalCallback {
-  (node: Vertex): void;
-}
-
-export function createGraph(): IGraph {
-  const adj = new Map<Vertex, Vertex[]>();
-  let root: null | Vertex = null;
-
-  function addVertex(vertex: Vertex): void {
-    if (adj.has(vertex)) {
-      throw new Error("Vertex already exists");
-    }
-    if (vertex.includes('/')) {
-      throw new Error("Vertex name could not include \'/\'")
-    }
-    if (root == null) {
-      root = vertex;
-    }
-    adj.set(vertex, new Array<Vertex>());
+  constructor() {
+    this.adj = new Map<Vertex, Vertex[]>();
+    this.root = null;
   }
 
-  function getEdge(lhs: Vertex, rhs: Vertex): Edge {
-    if (!adj.has(lhs)) {
-      throw new Error("lhs does not exist");
+  protected abstract buildEdge(lhs: Vertex, rhs: Vertex): Edge;
+
+  protected auxAddVertex(vertex: Vertex): void {
+    if (this.root == null) {
+      this.root = vertex;
     }
-    if (!adj.has(rhs)) {
-      throw new Error("rhs does not exist");
-    }
-    return getEdge(lhs, rhs);
+    this.adj.set(vertex, new Array<Vertex>());
   }
 
-  function addEdge(lhs: Vertex, rhs: Vertex): Edge {
-    if (!adj.has(lhs)) {
-      throw new Error("lhs does not exist");
-    }
-    if (!adj.has(rhs)) {
-      throw new Error("rhs does not exist");
-    }
-
-    const lAdj = adj.get(lhs) as Vertex[];
+  protected auxAddEdge(lhs: Vertex, rhs: Vertex): Edge {
+    const lAdj = this.adj.get(lhs) as Vertex[];
     if (lAdj.includes(rhs)) {
-      return getEdge(lhs, rhs);
+      return this.buildEdge(lhs, rhs);
     }
-    adj.set(lhs, lAdj.concat(rhs));
-    const rAdj = adj.get(rhs) as Vertex[];
-    adj.set(rhs, rAdj.concat(lhs));
-    return getEdge(lhs, rhs);
-  };
+    this.adj.set(lhs, lAdj.concat(rhs));
+    const rAdj = this.adj.get(rhs) as Vertex[];
+    this.adj.set(rhs, rAdj.concat(lhs));
+    return this.buildEdge(lhs, rhs);
+  }
 
-  function addEdges(lhs: Vertex, ...more: Vertex[]): Edge[] {
-    let edges = new Array<Edge>();
-    more.forEach((rhs) => {
-      const edge = addEdge(lhs, rhs);
-      edges = edges.concat(edge);
-    });
-    return edges;
-  };
+  getRoot(): Vertex | null {
+    return this.root;
+  }
 
-  function getAdjacent(vertex: Vertex): Vertex[] {
-    const v = adj.get(vertex);
+  getAdjacent(vertex: Vertex): Vertex[] {
+    const v = this.adj.get(vertex);
     return v == undefined ? new Array() : v;
   }
 
-  function dfs(callback: ITraversalCallback): void {
-    if (root == null) {
+  getEdge(lhs: Vertex, rhs: Vertex): Edge {
+    if (!this.adj.has(lhs)) {
+      throw new Error("lhs does not exist");
+    }
+    if (!this.adj.has(rhs)) {
+      throw new Error("rhs does not exist");
+    }
+    return this.buildEdge(lhs, rhs);
+  }
+
+  dfs(callback: ITraversalCallback): void {
+    if (this.root == null) {
       throw new Error("Graph is empty");
     }
     const visited = new Map<Vertex, boolean>();
+    const adj: Map<Vertex, Vertex[]> = this.adj;
     function recursiveDfs(root: Vertex, callback: ITraversalCallback): void {
       if (!adj.has(root)) {
         throw new Error("Vertex does not exist");
@@ -94,76 +71,126 @@ export function createGraph(): IGraph {
         recursiveDfs(child, callback);
       });
     }
-    recursiveDfs(root, callback);
-  };
-
-  return {
-    addVertex,
-    getEdge,
-    addEdge,
-    addEdges,
-    getAdjacent,
-    dfs,
+    recursiveDfs(this.root, callback);
   };
 }
 
-function getEdge(lhs: Vertex, rhs: Vertex): Edge {
-  return lhs < rhs ? lhs + '/' + rhs : rhs + '/' + lhs;
-}
-
-function getVertices(edge: Edge): Vertex[] {
-  const vertices = edge.split('/');
-  if (vertices.length != 2) {
-    throw new Error("Vertices count does not equal 2");
+export class Graph extends AbstractGraph {
+  protected buildEdge(lhs: Vertex, rhs: Vertex): Edge {
+    return lhs < rhs ? lhs + '/' + rhs : rhs + '/' + lhs;
   }
-  return vertices;
-} 
 
-function isEdgesRelated(lhs: Edge, rhs: Edge): boolean {
-  const set = new Set<Vertex>();
-  let related = false;
-  getVertices(lhs).concat(getVertices(rhs)).forEach((vertex: Vertex): void => {
-    if (set.has(vertex)) {
-      related = true;
-      return;
+  addVertex(vertex: Vertex): void {
+    if (this.adj.has(vertex)) {
+      throw new Error("Vertex already exists");
     }
-  });
-  return related;
-}
-
-function lineGraphGetVertices(vertex: Vertex): Array<Vertex> {
-  const vertices: Array<Vertex> = vertex.split('-');
-  if (vertices.length != 2) {
-    throw new Error("Vertex is not line graph's vertex");
+    if (vertex.includes('/')) {
+      throw new Error("Vertex name could not include \'/\'")
+    }
+    this.auxAddVertex(vertex);
   }
-  return vertices;
+
+  addEdge(lhs: Vertex, rhs: Vertex): Edge {
+    if (!this.adj.has(lhs)) {
+      throw new Error("lhs does not exist");
+    }
+    if (!this.adj.has(rhs)) {
+      throw new Error("rhs does not exist");
+    }
+    return this.auxAddEdge(lhs, rhs);
+  };
+
+  addEdges(lhs: Vertex, ...more: Vertex[]): Edge[] {
+    let edges = new Array<Edge>();
+    more.forEach((rhs) => {
+      const edge = this.addEdge(lhs, rhs);
+      edges = edges.concat(edge);
+    });
+    return edges;
+  };
 }
 
-function toLineGraph(
-  graph: IGraph,
-  ): IGraph {
-  const lineGraph = createGraph();
-  const edges = new Set<Edge>();
-  graph.dfs((vertex: Vertex): void => {
-    graph.getAdjacent(vertex).forEach((adjVertex: Vertex): void => {
-      edges.add(getEdge(vertex, adjVertex));
+class LineGraph extends AbstractGraph {
+  constructor(graph: Graph) {
+    super();
+    const edges = new Set<Edge>();
+    this.dfs((vertex: Vertex): void => {
+      this.getAdjacent(vertex).forEach((adjVertex: Vertex): void => {
+        edges.add(this.buildEdge(vertex, adjVertex));
+      })
+    });
+    let edgesArr = new Array<Edge>();
+    edges.forEach((edge: Edge): void => {
+      edgesArr = edgesArr.concat(edge);
+      this.addVertex(edge);
     })
-  });
-  let edgesArr = new Array<Edge>();
-  edges.forEach((edge: Edge): void => {
-    edgesArr = edgesArr.concat(edge);
-    lineGraph.addVertex(edge.replace('/', '-'));
-  })
-  
-  for (let i = 0; i < edgesArr.length - 1; i++) {
-    const edge: Edge = edgesArr[i];
-    for (let j = i; j < edgesArr.length; j++) {
-      const otherEdge: Edge = edgesArr[j];
-      if (isEdgesRelated(edge, otherEdge)) {
-        lineGraph.addEdge(edge, otherEdge);
+    
+    for (let i = 0; i < edgesArr.length - 1; i++) {
+      const edge: Edge = edgesArr[i];
+      for (let j = i; j < edgesArr.length; j++) {
+        const otherEdge: Edge = edgesArr[j];
+        if (this.isPlainEdgesRelated(edge, otherEdge)) {
+          this.addEdge(edge, otherEdge);
+        }
       }
     }
   }
 
-  return lineGraph;
+  private getPlainVertices(edge: Edge): Vertex[] {
+    const vertices = edge.split('/');
+    if (vertices.length != 2) {
+      throw new Error("Vertices count does not equal 2");
+    }
+    return vertices;
+  } 
+  
+  private isPlainEdgesRelated(lhs: Edge, rhs: Edge): boolean {
+    const set = new Set<Vertex>();
+    let related = false;
+    const lVertices: Vertex[] = this.getPlainVertices(lhs);
+    const rVertices: Vertex[] = this.getPlainVertices(rhs);
+    const vertices = lVertices.concat(rVertices);
+    vertices.forEach((vertex: Vertex): void => {
+      if (set.has(vertex)) {
+        related = true;
+        return;
+      }
+    });
+    return related;
+  }
+
+  protected buildEdge(lhs: Vertex, rhs:Vertex): Edge {
+    const lVertices: Array<Edge> = lhs.split("/");
+    const rVertices: Array<Edge> = rhs.split("/");
+    if ((lVertices[0] = rVertices[0]) || (lVertices[0] = rVertices[1])) {
+      return lVertices[0];
+    } else if ((lVertices[1] = rVertices[0]) || (lVertices[1] = rVertices[1])) {
+      return lVertices[1];
+    }
+    throw new Error("Vertices are not related"); 
+  }
+
+  private addVertex(vertex: Vertex): void {
+    if (this.adj.has(vertex)) {
+      throw new Error("Vertex already exists");
+    }
+    if (!vertex.includes('/')) {
+      throw new Error("Vertex name must include \'/\'")
+    }
+    this.auxAddVertex(vertex);
+  }
+
+  private addEdge(lhs: Vertex, rhs: Vertex): Edge {
+    if (!this.adj.has(lhs)) {
+      throw new Error("lhs does not exist");
+    }
+    if (!this.adj.has(rhs)) {
+      throw new Error("rhs does not exist");
+    }
+    return this.auxAddEdge(lhs, rhs);
+  }
+}
+
+interface ITraversalCallback {
+  (node: Vertex): void;
 }
