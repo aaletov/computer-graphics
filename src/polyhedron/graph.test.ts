@@ -1,5 +1,6 @@
 import { describe, expect, test, beforeEach } from '@jest/globals';
 import { AbstractGraph, Graph, ITraversalCallback, LineGraph, Vertex } from "./graph";
+import { ITreeNode } from './tree';
 
 function getRootOnlyGraph(v: Vertex): Graph {
   const graph = new Graph();
@@ -46,6 +47,9 @@ describe("Graph", () => {
       graph.dfs((vertex: Vertex): void => {it++});
       expect(it).toEqual(0);
     });
+    test("coverTree is null", () => {
+      expect(graph.coverTree()).toBeNull();
+    });
   });
 
   describe("is root-only graph", () => {
@@ -67,6 +71,11 @@ describe("Graph", () => {
       expect(vertices.length).toEqual(1);
       expect(vertices[0]).toEqual(expectedRoot);
     });
+    test("coverTree has one node", () => {
+      const tree = graph.coverTree() as ITreeNode<Vertex>;
+      expect(tree.children.length).toEqual(0);
+      expect(tree.value).toEqual(expectedRoot);
+    });
   });
 
   describe("has two linked vertices", () => {
@@ -80,11 +89,16 @@ describe("Graph", () => {
     test("root is the first added vertex", () => {
       expect(root).toEqual(expectedVertexA);
     });
-  
     test("root has single adjacent vertex equals second added vertex", () => {
       const adj: Array<Vertex> = graph.getAdjacent(root as Vertex);
       expect(adj.length).toEqual(1);
       expect(adj[0]).toEqual(expectedVertexB);
+    });
+    test("coverTree has two nodes", () => {
+      const tree = graph.coverTree() as ITreeNode<Vertex>;
+      expect(tree.children.length).toEqual(1);
+      expect(tree.value).toEqual(expectedVertexA);
+      expect(tree.children[0].value).toEqual(expectedVertexB);
     });
   });
 
@@ -104,6 +118,29 @@ describe("Graph", () => {
       expect(rAdj.includes(vertices[0][1]) && rAdj.includes(vertices[1][0])).toEqual(true);
       expect(lAdj.length).toEqual(2);
       expect(lAdj.includes(vertices[0][1]) && lAdj.includes(vertices[1][0])).toEqual(true);
+    });
+    test("coverTree has two nodes", () => {
+      const tree = graph.coverTree() as ITreeNode<Vertex>;
+      const expectedTree = {
+        value: vertices[0][0],
+        children: [
+          {
+            value: vertices[0][1],
+            children: [
+              {
+                value: vertices[1][1],
+                children: [
+                  {
+                    value: vertices[1][0],
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ]
+      }
+      expect(tree).toEqual(expectedTree);
     });
   });
 });

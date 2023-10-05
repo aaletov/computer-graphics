@@ -1,4 +1,4 @@
-import { addEmitHelper } from "typescript";
+import { ITreeNode, createTreeNode } from "./tree";
 
 export type Vertex = string;
 export type Edge = string;
@@ -49,6 +49,34 @@ export abstract class AbstractGraph {
       throw new Error("rhs does not exist");
     }
     return this.buildEdge(lhs, rhs);
+  }
+
+  coverTree(): ITreeNode<Vertex> | null {
+    if (this.root == null) {
+      return null;
+    }
+    const visited = new Map<Vertex, boolean>();
+    const added = new Map<Vertex, boolean>();
+    const tree = createTreeNode(this.root);
+    added.set(this.root, true);
+    const graph = this;
+    function recursiveCover(treeRoot: ITreeNode<Vertex>, graphRoot: Vertex): void {
+      if (visited.has(graphRoot)) {
+        return;
+      }
+      visited.set(graphRoot, true);
+      graph.getAdjacent(graphRoot).forEach((v: Vertex): void => {
+        if (added.has(v)) {
+          return;
+        }
+        const child: ITreeNode<Vertex> = createTreeNode(v);
+        treeRoot.children = treeRoot.children.concat(child);
+        added.set(v, true);
+        recursiveCover(child, v);
+      });
+    }
+    recursiveCover(tree, graph.root as Vertex);
+    return tree;
   }
 
   dfs(callback: ITraversalCallback): void {
