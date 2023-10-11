@@ -1,11 +1,11 @@
 import './App.css';
 import { useEffect, useRef } from 'react';
-import { DodecahedronScene } from './scenes/dodecahedron-scene/dodecahedronScene';
+import { ConeScene } from './scenes/cone-scene/coneScene';
 
 function App() {
   return (
     <div className="App">
-      <DodecahedronScene/>
+      <ConeScene/>
     </div>
   );
 }
