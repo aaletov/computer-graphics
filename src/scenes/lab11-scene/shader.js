@@ -52,9 +52,9 @@ function initShaderProgram(gl, vsSource, fsSource) {
 }
 
 export async function getLab1ShaderProgram(gl) {
-  const vsSourceResponse = await fetch('./shaders/lab11-scene/vertex.glsl');
+  const vsSourceResponse = await fetch('./shaders/lab1-scene/vertex.glsl');
   const vsSource = await vsSourceResponse.text();
-  const fsSourceResponse = await fetch('./shaders/lab11-scene/fragment.glsl');
+  const fsSourceResponse = await fetch('./shaders/lab1-scene/fragment.glsl');
   const fsSource = await fsSourceResponse.text();
   
   const shaderProgram = initShaderProgram(gl, vsSource, fsSource);

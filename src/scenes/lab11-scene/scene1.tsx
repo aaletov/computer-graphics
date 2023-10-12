@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { drawLab1 } from './draw';
 
-export function Lab1Scene() {
+export function Lab1Scene1() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current;
