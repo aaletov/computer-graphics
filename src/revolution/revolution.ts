@@ -68,27 +68,29 @@ export function concatWithLoop<Type>(
     throw new Error("Array length is less than other, can't create loop");
   }
 
-  const reversedOther: Array<Type> = other.slice().reverse();
-  let out = [...array, ...reversedOther];
-  for (let i = 1; i < other.length; i++) {
-    const aLen = array.length;
-    const othLen = other.length
+  let out = [...array];
+  const aLen = array.length;
+  const othLen = other.length;
+  for (let i = 1; i < othLen; i++) {
     out = out.concat(
-      array[aLen - othLen + (i - 1)],
-      array[aLen - othLen + i],
-      reversedOther[othLen - (i + 1)],
+      other[othLen - i],
+      array[aLen - i],
+      array[aLen - i - 1],
     );
   }
+
+  out = out.concat(...other);
 
   return out;
 }
 
 class RevolutionSolid implements IRevolutionSolid {
   public readonly coordinates: Array<number>;
-  constructor(line: Array<vec3>, segmentsCount: number, axis: Axis) {
+  constructor(line: Array<vec3>, fullAngle: number, segmentsCount: number, axis: Axis) {
     let vertices: Array<vec3> = [...line];
-    const angleQuant: number = (2 * Math.PI) / segmentsCount;
-    for (let angle: number = angleQuant; angle < (2 * Math.PI); angle += angleQuant) {
+    const angleQuant: number = fullAngle / (segmentsCount - 1);
+    console.log(angleQuant);
+    for (let angle: number = angleQuant; angle < fullAngle; angle += angleQuant) {
       const rotated: Array<vec3> = rotateLine(line, angle, axis);
       vertices = concatWithLoop(vertices, ...rotated);
     }
@@ -107,5 +109,33 @@ export function createCone(r: number, h: number, segmentsCount: number): IRevolu
     new Float32Array([0.0, r, 0.0]),
     new Float32Array([0.0, 0.0, h]),
   );
-  return new RevolutionSolid(line, segmentsCount, Axis.Y);
+  return new RevolutionSolid(line, (2 * Math.PI), segmentsCount, Axis.Y);
+}
+
+export function createTorus(
+  circleRadius: number,
+  circleSegmentsCount: number,
+  torusRadius: number,
+  torusSegmentCount: number,
+): IRevolutionSolid {
+  const circleAngleQuant = 2 * Math.PI / (circleSegmentsCount - 1);
+  const startingVertex = new Float32Array([circleRadius, 0.0, 0.0]);
+  const line = new Array<vec3>(
+    startingVertex,
+  );
+  for (let i = 1; i < circleSegmentsCount; i++) {
+    const angle = i * circleAngleQuant;
+    line.push(new Float32Array([
+      circleRadius * Math.cos(angle),
+      circleRadius * Math.sin(angle),
+      0.0,
+    ]));
+  }
+  line.forEach((vertex: vec3): void => {
+    vertex[0] += torusRadius;
+    vertex[1] += torusRadius;
+    vertex[2] += torusRadius;
+  });
+
+  return new RevolutionSolid(line, (2 * Math.PI), torusSegmentCount, Axis.Y)
 }

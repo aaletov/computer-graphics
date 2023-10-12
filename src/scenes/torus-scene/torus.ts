@@ -1,11 +1,11 @@
 import { mat4 } from 'gl-matrix';
-import { setConePositionAttribute } from './attributes';
-import { getConeShaderProgram } from './shader';
-import { initConePositionBuffer } from './buffers';
-import { createCone } from '../../revolution/revolution';
+import { setTorusPositionAttribute } from './attributes';
+import { getTorusShaderProgram } from './shader';
+import { initTorusPositionBuffer } from './buffers';
+import { createTorus, rotateLine } from '../../revolution/revolution';
 
-export async function initConeProgram(gl: WebGLRenderingContext) {
-  const shaderProgram = await getConeShaderProgram(gl);
+export async function initTorusProgram(gl: WebGLRenderingContext) {
+  const shaderProgram = await getTorusShaderProgram(gl);
   const programInfo = {
     program: shaderProgram,
     attribLocations: {
@@ -18,9 +18,16 @@ export async function initConeProgram(gl: WebGLRenderingContext) {
   };
 
   // Now create an array of positions for the square.
-  const positions = createCone(1.0, 1.0, 20).coordinates
+  const positions = createTorus(0.5, 16, 0.5, 20).coordinates;
+  console.log(positions);
+  // const positions = [
+  //   0.5, 0.5, 0.0,
+  //   0.75, 0.5, 0.0,
+  //   0.75, 0.25, 0.0,
+  //   0.5, 0.25, 0.0,
+  // ];
 
-  const positionBuffer = initConePositionBuffer(gl, positions);
+  const positionBuffer = initTorusPositionBuffer(gl, positions);
   return {
     shaderProgram: shaderProgram,
     positionBuffer: positionBuffer,
@@ -28,11 +35,11 @@ export async function initConeProgram(gl: WebGLRenderingContext) {
   };
 }
 
-export function drawCone(
+export function drawTorus(
   gl: WebGLRenderingContext,
-  coneProgram: any,
+  torusProgram: any,
 ) {
-  const coneRotation = 0.030;
+  const torusRotation = 0.030;
   gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
   gl.clearDepth(1.0); // Clear everything
   gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -75,43 +82,43 @@ export function drawCone(
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
-    coneRotation, // amount to rotate in radians
+    Math.PI * (0 / 180), // amount to rotate in radians
     [0, 0, 1],
   ); // axis to rotate around (Z)
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
-    coneRotation * 10.0, // amount to rotate in radians
+    Math.PI * (0 / 180), // amount to rotate in radians
     [0, 1, 0],
   ); // axis to rotate around (Y)
   mat4.rotate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to rotate
-    coneRotation * 0.3, // amount to rotate in radians
+    Math.PI * (45 / 180), // amount to rotate in radians
     [1, 0, 0],
   ); // axis to rotate around (X)
 
   // Tell WebGL how to pull out the positions from the position
   // buffer into the vertexPosition attribute.
-  setConePositionAttribute(gl, coneProgram.programInfo);
+  setTorusPositionAttribute(gl, torusProgram.programInfo);
 
   // Tell WebGL to use our program when drawing
-  gl.useProgram(coneProgram.programInfo.program);
+  gl.useProgram(torusProgram.programInfo.program);
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
-    coneProgram.programInfo.uniformLocations.projectionMatrix,
+    torusProgram.programInfo.uniformLocations.projectionMatrix,
     false,
     projectionMatrix,
   );
   gl.uniformMatrix4fv(
-    coneProgram.programInfo.uniformLocations.modelViewMatrix,
+    torusProgram.programInfo.uniformLocations.modelViewMatrix,
     false,
     modelViewMatrix,
   );
 
   {
-    const vertexCount = 97;
+    const vertexCount = 1175;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);

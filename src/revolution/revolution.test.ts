@@ -63,7 +63,7 @@ describe("concatWithLoop", () => {
   test("arrays size are equal 2", () => {
     const array = new Array<number>(1, 2);
     const other = new Array<number>(3, 4);
-    const expected = new Array<number>(1, 2, 4, 3, 1, 2, 4);
+    const expected = new Array<number>(1, 2, 4, 2, 1, 3, 4);
     const concated: Array<number> = concatWithLoop(array, ...other);
     expect(concated).toEqual(expected);
   });
@@ -72,10 +72,10 @@ describe("concatWithLoop", () => {
     const other = new Array<number>(5, 6, 7, 8);
     const expected = new Array<number>(
       1, 2, 3, 4,
-      8, 7, 6, 5,
-      1, 2, 6,
-      2, 3, 7,
-      3, 4, 8, 
+      8, 4, 3,
+      7, 3, 2,
+      6, 2, 1,
+      5, 6, 7, 8,
     );
     const concated: Array<number> = concatWithLoop(array, ...other);
     expect(concated).toEqual(expected);
