@@ -83,6 +83,7 @@ export async function drawLab1Scene1(
 ) {
   const program = await initLab1Program(gl);
   let i = 0;
+  let direction = 1;
   function render(now: DOMHighResTimeStamp) {
     initScene(gl);
 
@@ -94,10 +95,18 @@ export async function drawLab1Scene1(
     setDodecahedronBuffer(program.positionBuffer);
     drawLab1Dodecahedron(gl, program, i * (Math.PI / 2));
 
-    i = (i == 1) ? 0 : 1;
+    i += direction * 0.01;
+    if (i > 1) {
+      i = 1.0;
+      direction = -1;
+    }
+    if (i < 0) {
+      i = 0.0;
+      direction = 1;
+    }
     setTimeout(() => {
       requestAnimationFrame(render);
-    }, 5000);
+    }, 1);
   }
   requestAnimationFrame(render);
 };
@@ -116,6 +125,7 @@ export async function drawLab1Scene2(
   gl: WebGLRenderingContext,
 ) {
   const program = await initLab1Program(gl);
+  let direction = 1;
   let i = 0;
   function render(now: DOMHighResTimeStamp) {
     initScene(gl);
@@ -128,10 +138,18 @@ export async function drawLab1Scene2(
     setTorusBuffer(program.positionBuffer);
     drawLab1Torus(gl, program);
 
-    i = (i == 1) ? 0 : 1;
+    i += direction * 0.01;
+    if (i > 1) {
+      i = 1.0;
+      direction = -1;
+    }
+    if (i < 0) {
+      i = 0.0;
+      direction = 1;
+    }
     setTimeout(() => {
       requestAnimationFrame(render);
-    }, 5000);
+    }, 1);
   }
   requestAnimationFrame(render);
   setLab1PositionAttribute(gl, program.programInfo);
