@@ -1,13 +1,9 @@
 import { mat4 } from 'gl-matrix';
-import { PolyhedronFactory } from '../../polyhedron/polyhedron';
-import { getLab1ShaderProgram } from './shader';
-import { initLab1PositionBuffer } from './buffers';
-import { setLab1PositionAttribute } from './attributes';
+import { createTorus, rotateLine } from '../../revolution/revolution';
 
-export function drawLab1Dodecahedron(
+export function drawLab1Torus(
   gl: WebGLRenderingContext,
-  dodecahedronProgram: any,
-  yRotation: number,
+  torusProgram: any,
 ) {
   // Create a perspective matrix, a special matrix that is
   // used to simulate the distortion of perspective in a camera.
@@ -36,37 +32,26 @@ export function drawLab1Dodecahedron(
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
-    [-2.0, 0.0, -7.0],
+    [-0.0, 0.0, -6.0],
   ); // amount to translate
 
-  mat4.rotate(
-    modelViewMatrix, // destination matrix
-    modelViewMatrix, // matrix to rotate
-    yRotation, // amount to rotate in radians
-    [0, 1, 0],
-  ); // axis to rotate around (Y)
-
-  // Tell WebGL how to pull out the positions from the position
-  // buffer into the vertexPosition attribute.
-  setLab1PositionAttribute(gl, dodecahedronProgram.programInfo);
-
   // Tell WebGL to use our program when drawing
-  gl.useProgram(dodecahedronProgram.programInfo.program);
+  gl.useProgram(torusProgram.programInfo.program);
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
-    dodecahedronProgram.programInfo.uniformLocations.projectionMatrix,
+    torusProgram.programInfo.uniformLocations.projectionMatrix,
     false,
     projectionMatrix,
   );
   gl.uniformMatrix4fv(
-    dodecahedronProgram.programInfo.uniformLocations.modelViewMatrix,
+    torusProgram.programInfo.uniformLocations.modelViewMatrix,
     false,
     modelViewMatrix,
   );
 
   {
-    const vertexCount = 116;
+    const vertexCount = 1175;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);

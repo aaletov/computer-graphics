@@ -1,12 +1,10 @@
 import { mat4 } from 'gl-matrix';
-import { getLab1ShaderProgram } from './shader';
-import { initLab1PositionBuffer } from './buffers';
-import { setLab1PositionAttribute } from './attributes';
+import { createCone } from '../../revolution/revolution';
 
-export function drawLab1Cube(
+export function drawLab1Cone(
   gl: WebGLRenderingContext,
-  cubeProgram: any,
-  xRotation: number,
+  coneProgram: any,
+  xShift: number,
 ) {
   // Create a perspective matrix, a special matrix that is
   // used to simulate the distortion of perspective in a camera.
@@ -35,37 +33,26 @@ export function drawLab1Cube(
   mat4.translate(
     modelViewMatrix, // destination matrix
     modelViewMatrix, // matrix to translate
-    [1.0, 0.0, -7.0],
+    [xShift, -0.5, -6.0],
   ); // amount to translate
 
-  mat4.rotate(
-    modelViewMatrix, // destination matrix
-    modelViewMatrix, // matrix to rotate
-    xRotation, // amount to rotate in radians
-    [1, 0, 0],
-  ); // axis to rotate around (X)
-
-  // Tell WebGL how to pull out the positions from the position
-  // buffer into the vertexPosition attribute.
-  setLab1PositionAttribute(gl, cubeProgram.programInfo);
-
   // Tell WebGL to use our program when drawing
-  gl.useProgram(cubeProgram.programInfo.program);
+  gl.useProgram(coneProgram.programInfo.program);
 
   // Set the shader uniforms
   gl.uniformMatrix4fv(
-    cubeProgram.programInfo.uniformLocations.projectionMatrix,
+    coneProgram.programInfo.uniformLocations.projectionMatrix,
     false,
     projectionMatrix,
   );
   gl.uniformMatrix4fv(
-    cubeProgram.programInfo.uniformLocations.modelViewMatrix,
+    coneProgram.programInfo.uniformLocations.modelViewMatrix,
     false,
     modelViewMatrix,
   );
 
   {
-    const vertexCount = 19;
+    const vertexCount = 97;
     const type = gl.UNSIGNED_SHORT;
     const offset = 0;
     gl.drawArrays(gl.LINE_STRIP, offset, vertexCount);

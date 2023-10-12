@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { drawLab1 } from './draw';
+import { drawLab1Scene1 } from './draw';
 
 export function Lab1Scene1() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -18,7 +18,7 @@ export function Lab1Scene1() {
       return;
     }
     
-    drawLab1(gl);
+    drawLab1Scene1(gl);
   });
 
   return <canvas id="glcanvas" width="640" height="480" ref={ref}></canvas>
