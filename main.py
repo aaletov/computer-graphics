@@ -1,5 +1,4 @@
-import moderngl
+import computer_graphics as cg
 
 if __name__ == "__main__":
-    ctx = moderngl.create_context()
-    
+    cg.Hello.run()
