@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "computer-graphics"
+version = "0.1.0"
+description = ""
+authors = ["aapozd <aapozdnyakove@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+igraph = "^0.11.2"
+moderngl = "^5.8.2"
+
+
+[tool.poetry.group.dev.dependencies]
+cairocffi = "^1.6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
