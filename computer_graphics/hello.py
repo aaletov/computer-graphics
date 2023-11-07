@@ -39,26 +39,6 @@ class Hello(base.WindowBase):
             -1.0, -1.0, 0.0,
             -1.0, 1.0, 0.0,
             1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-            # 1.0, -1.0, 0.0,
-            # -1.0, -1.0, 0.0,
         ], dtype='f4')
 
         self.vbo = self.ctx.buffer(vertices.tobytes())
@@ -78,12 +58,12 @@ class Hello(base.WindowBase):
         fieldOfView = (90 * math.pi) / 180 # in radians
         aspect = self.window_size[0] / self.window_size[1]
         zNear = 0.1
-        zFar = 100.0
+        zFar = 1000.0
 
         perspective = Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
         lookat = Matrix44.look_at(
-            (4, 3, 2),
+            (0, 50, 100),
             (0.0, 0.0, 0.0),
             (0.0, 1.0, 0.0),
             dtype='f4'
