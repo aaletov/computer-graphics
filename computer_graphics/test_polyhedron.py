@@ -1,6 +1,6 @@
 import unittest
 import igraph as ig
-from .polyhedron import to_line, to_triangulized
+from .polyhedron import to_line, to_triangulized, sort_pairs
 
 def get_plain_graph() -> ig.Graph:
     return ig.Graph(n=5, edges=[
@@ -25,6 +25,25 @@ class TestToLine(unittest.TestCase):
         ])
         line = to_line(graph)
         self.assertEqual(line, [])
+
+class TestSortPairs(unittest.TestCase):
+    def test_penta(self):
+        edges = [
+            (1, 0),
+            (1, 2),
+            (3, 2),
+            (3, 4),
+            (4, 0),
+        ]
+        expected_edges = [
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 4),
+            (4, 0),
+        ]
+        sorted_edges = sort_pairs(edges)
+        self.assertEqual(sorted_edges, expected_edges)
 
 class TestToTriangulized(unittest.TestCase):
     def test_plain(self):

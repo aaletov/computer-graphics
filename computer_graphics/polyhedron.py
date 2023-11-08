@@ -6,6 +6,38 @@ import igraph as ig
 VertexLabel = int
 Point = Tuple[float, float, float]
 
+# Return sorted left
+def sort_left(le: Tuple[int, int], re: Tuple[int, int]) -> Tuple[int, int]:
+    les, let = le[0], le[1]
+    res, ret = re[0], re[1]
+    if (les == res) or (les == ret):
+        return (let, les)
+    elif (let == res) or (let == ret):
+        return (les, let)
+    else:
+        raise RuntimeError("edges not related")
+
+# Consider left already sorted
+def sort_right(le: Tuple[int, int], re: Tuple[int, int]) -> Tuple[int, int]:
+    les, let = le[0], le[1]
+    res, ret = re[0], re[1] 
+    if let == ret:
+        return (ret, res)
+    elif let == res:
+        return (res, ret)
+    else:
+        raise RuntimeError("edges not related")
+
+def sort_pairs(edges: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    sorted_list = []
+    le = sort_left(edges[0], edges[1])
+    for re in edges[1:]:
+        sorted_re = sort_right(le, re)
+        sorted_list.append(le)
+        le = sorted_re
+    sorted_list.append(le)
+    return sorted_list
+
 def to_line(graph: ig.Graph) -> List[Tuple[int, int]]:
     linegraph: ig.Graph = graph.linegraph()
     tree: ig.Graph = linegraph.spanning_tree()
@@ -62,21 +94,22 @@ class Polyhedron:
         return cover_line
     
     def get_cover_triangles(self) -> List[Tuple[Point, Point, Point]]:
-        triangulized = to_triangulized(self.graph)
-        triangles = []
-        for triangle in triangulized.fundamental_cycles():
-            vertices = set()
-            for edge in triangle:
-                vertices.add(triangulized.es[edge].source)
-                vertices.add(triangulized.es[edge].target)
-            ordered_vertices = list(vertices)
-            triangles.append((
-                self.coords[ordered_vertices[0]],
-                self.coords[ordered_vertices[1]],
-                self.coords[ordered_vertices[2]],
-            ))
+        triangles: List[Tuple[Point, Point, Point]] = []
+        for cycle in self.graph.fundamental_cycles():
+            pairs = list([(self.graph.es[e].source, self.graph.es[e].target) for e in cycle])
+            pairs = sort_pairs(pairs)
+            vertices = [pairs[0][0]] + [pair[1] for pair in pairs]
+            pivot = vertices[0]
+            for i in range(0, len(vertices) - 2):
+                triangles.append(
+                    (
+                        self.coords[pivot],
+                        self.coords[vertices[i + 1]],
+                        self.coords[vertices[i + 2]],
+                    )
+                )
+
         return triangles
-        
 
 def createDodecahedron() -> Polyhedron:
     graph = ig.Graph(20, edges=[

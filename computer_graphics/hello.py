@@ -36,13 +36,20 @@ class Hello(WindowBase):
         )
 
 
-        dodecahedron = createDodecahedron()
-        line = dodecahedron.get_cover_line()
+        dodecahedron = createCube()
+        # line = dodecahedron.get_cover_line()
         raw_vertices = []
-        for point in line:
-            for c in point:
-                raw_vertices.append(c)
-        # dodecahedron.get_cover_line
+        # for point in line:
+        #     for c in point:
+        #         raw_vertices.append(c)
+        triangles = dodecahedron.get_cover_triangles()
+        for triangle in triangles:
+            raw_vertices += [
+                *triangle[0],
+                *triangle[1],
+                *triangle[2],
+            ]
+        print(raw_vertices)
         vertices = np.array(raw_vertices, dtype='f4')
 
         self.vbo = self.ctx.buffer(vertices.tobytes())
@@ -67,7 +74,7 @@ class Hello(WindowBase):
         perspective = Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
         lookat = Matrix44.look_at(
-            (20, 50, 100),
+            (20, 20, 100),
             (0.0, 0.0, 0.0),
             (0.0, 1.0, 0.0),
             dtype='f4'
@@ -79,7 +86,7 @@ class Hello(WindowBase):
         self.prog["mvp"].write(mvp.tobytes())
 
         # self.prog['model'].write(Matrix44.from_eulers((0.0, 0.1, 0.0), dtype='f4'))
-        self.vao.render(mode=moderngl.LINES)
+        self.vao.render(mode=moderngl.TRIANGLES)
         
 
 if __name__ == '__main__':
