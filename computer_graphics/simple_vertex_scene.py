@@ -8,7 +8,7 @@ import moderngl as mgl
 from .base import WindowBase
 from .solid import Solid, createDodecahedron, createCube
 
-class Scene(WindowBase):
+class SimpleVertexScene(WindowBase):
     title = 'Hello Program'
 
     def __init__(self, **kwargs):
