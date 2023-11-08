@@ -1,18 +1,14 @@
-from typing import List
+from typing import List, Callable
 
 import math
 import numpy as np
 import pyrr
-import moderngl
+import moderngl as mgl
 
 from .base import WindowBase
-from .polyhedron import createDodecahedron, createCube, Polyhedron
-from .cgsolid import CgLineSolid, CgDumbSolid, CgBaseSolid
+from .solid import Solid, createDodecahedron, createCube
 
-from PIL import Image
-
-
-class Hello(WindowBase):
+class Scene(WindowBase):
     title = 'Hello Program'
 
     def __init__(self, **kwargs):
@@ -40,11 +36,11 @@ class Hello(WindowBase):
             ''',
         )
 
-        self.solids: List[CgBaseSolid] = [
-            CgLineSolid(self.ctx, self.prog, createCube()),
-            CgLineSolid(self.ctx, self.prog, createDodecahedron()),
-            CgDumbSolid(self.ctx, self.prog, createCube()),
-            CgDumbSolid(self.ctx, self.prog, createDodecahedron()),
+        self.solids: List[BaseModel] = [
+            LineModel(self.ctx, self.prog, createCube()),
+            LineModel(self.ctx, self.prog, createDodecahedron()),
+            DumbModel(self.ctx, self.prog, createCube()),
+            DumbModel(self.ctx, self.prog, createDodecahedron()),
         ]
 
         # self.fbo = self.ctx.framebuffer(color_attachments=[self.ctx.texture((512, 512), 4)])
@@ -52,7 +48,7 @@ class Hello(WindowBase):
 
     def render(self, time: float, frame_time: float):
         # self.fbo.use()
-        self.ctx.enable(moderngl.DEPTH_TEST)
+        self.ctx.enable(mgl.DEPTH_TEST)
         # self.ctx.clear(color=(0.0, 0.0, 0.0, 1.0))
         self.ctx.clear(0.0, 0.0, 0.0, 0.0)
 
@@ -76,7 +72,47 @@ class Hello(WindowBase):
         for solid, x in zip(self.solids, np.linspace(-0.75, 0.75, len(self.solids))):
             model = pyrr.Matrix44.from_translation(np.array([x, 0.0, 0.0]), dtype='f4')
             solid.render(model)
+
+class BaseModel:
+    def __init__(self, ctx: mgl.Context, program: mgl.Program, solid: Solid) -> None:
+        raise NotImplementedError()
+    
+    def render(self, model: pyrr.Matrix44):
+        self.prog["model"].write(model.tobytes())
+    
+class LineModel(BaseModel):
+    def __init__(self, ctx: mgl.Context, program: mgl.Program, solid: Solid) -> None:
+        self.ctx = ctx
+        self.prog = program
+
+        vertices = solid.get_cover_line()
+
+        self.vbo = self.ctx.buffer(vertices.astype('f4').tobytes())
+        self.vao = self.ctx.vertex_array(self.prog, [
+            (self.vbo, '3f', 'aVertexPosition'),
+        ])
+
+    def render(self, model: pyrr.Matrix44) -> None:
+        super().render(model)
+        self.vao.render(mode=mgl.LINES)
+        
+
+class DumbModel(BaseModel):
+    def __init__(self, ctx: mgl.Context, program: mgl.Program, solid: Solid) -> None:
+        self.ctx = ctx
+        self.prog = program
+
+        vertices = solid.get_cover_triangles()
+
+        self.vbo = self.ctx.buffer(vertices.astype('f4').tobytes())
+        self.vao = self.ctx.vertex_array(self.prog, [
+            (self.vbo, '3f', 'aVertexPosition'),
+        ])
+
+    def render(self, model: pyrr.Matrix44) -> None:
+        super().render(model)
+        self.vao.render(mode=mgl.TRIANGLES)
         
 
 if __name__ == '__main__':
-    Hello.run()
+    Scene.run()
