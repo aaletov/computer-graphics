@@ -10,12 +10,6 @@ def get_plain_graph() -> ig.Graph:
         (1, 3),
     ])
 
-# class TestAlignEdges(unittest.TestCase):
-#     def test_plain(self):
-#         graph = get_plain_graph()
-#         edges = [0, 1, 0, 2, 0, 3, 0]
-#         self.assertEqual([0, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 0, 0, 4], align_edges(graph, edges))
-
 class TestToLine(unittest.TestCase):
     def test_plain(self):
         graph = get_plain_graph()

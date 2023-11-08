@@ -6,52 +6,10 @@ import igraph as ig
 VertexLabel = int
 Point = Tuple[float, float, float]
 
-# Return sorted left
-# def sort_left(graph: ig.Graph, le: int, re: int) -> Tuple[int, int]:
-#     les, let = graph.es[le].source, graph.es[le].target
-#     res, ret = graph.es[re].source, graph.es[re].target
-#     if (les == res) or (les == ret):
-#         return (let, les)
-#     elif (let == res) or (let == ret):
-#         return (les, let)
-#     else:
-#         raise RuntimeError("edges not related")
-
-# # Consider left already sorted
-# def sort_right(graph: ig.Graph, les: int, let: int, re: int) -> Tuple[int, int]:
-#     res, ret = graph.es[re].source, graph.es[re].target
-#     # Few extra checks
-#     if (ret == les) or (ret == let):
-#         return (ret, res)
-#     elif (res == les) or (res == let):
-#         return (res, ret)
-#     else:
-#         raise RuntimeError("edges not related")
-
-# def align_edges(graph: ig.Graph, edge_idx: List[int]) -> List[int]:
-#     sorted_list = []
-#     les, let = sort_left(graph, edge_idx[0], edge_idx[1])
-#     for re in edge_idx[1:]:
-#         res, ret = sort_right(graph, les, let, re)
-#         sorted_list += [les, let]
-#         les, let = res, ret
-#     sorted_list += [les, let]
-#     return sorted_list
-
 def to_line(graph: ig.Graph) -> List[Tuple[int, int]]:
     linegraph: ig.Graph = graph.linegraph()
     tree: ig.Graph = linegraph.spanning_tree()
     edges, parents = tree.dfs(0)
-    # edge_line = []
-    # for i in range(len(edges) - 1):
-    #     e, p = edges[i], parents[i]
-    #     if len(edge_line) == 0:
-    #         edge_line.append(e)
-    #         continue
-
-    #     path: list = tree.get_shortest_path(edge_line[-1], e)[1:]
-    #     edge_line += path
-    # return list([(graph.es[e].source, graph.es[e].target) for e in edge_line])
     return list([(graph.es[e].source, graph.es[e].target) for e in edges])
 
 def to_cartesian(point: Point) -> Point:
@@ -162,10 +120,10 @@ def createDodecahedron() -> Polyhedron:
     polar_coords: Dict[VertexLabel, Point] = {
         # [0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 11, 12, 18, 16, 17, 19, 13, 14, 10, 15]
         # ['A', 'B', 'C', 'D', 'H', 'E', 'F', 'G', 'I', 'J', 'L', 'M', 'S', 'Q', 'R', 'T', 'N', 'O', 'K', 'P']
-        0: (R, (math.pi / 4) + 0*(math.pi / 2), ALPHA), # A
-        1: (R, (math.pi / 4) + 1*(math.pi / 2), ALPHA), # B
-        2: (R, (math.pi / 4) + 2*(math.pi / 2), ALPHA), # C
-        3: (R, (math.pi / 4) + 3*(math.pi / 2), ALPHA), # D
+        0: (R, (math.pi / 4) + 0 *(math.pi / 2), ALPHA), # A
+        1: (R, (math.pi / 4) + 1 *(math.pi / 2), ALPHA), # B
+        2: (R, (math.pi / 4) + 2 *(math.pi / 2), ALPHA), # C
+        3: (R, (math.pi / 4) + 3 *(math.pi / 2), ALPHA), # D
         7: (R, (math.pi / 4) + 0 * (math.pi / 2), -ALPHA), # H
         4: (R, (math.pi / 4) + 1 * (math.pi / 2), -ALPHA), # E
         5: (R, (math.pi / 4) + 2 * (math.pi / 2), -ALPHA), # F
