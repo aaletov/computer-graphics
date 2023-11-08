@@ -3,12 +3,12 @@ import numpy as np
 from pyrr import Matrix44
 import moderngl
 
-import computer_graphics.base as base
+from .base import WindowBase
+from .polyhedron import createDodecahedron, createCube
 
 from PIL import Image
 
-
-class Hello(base.WindowBase):
+class Hello(WindowBase):
     title = 'Hello Program'
 
     def __init__(self, **kwargs):
@@ -35,11 +35,15 @@ class Hello(base.WindowBase):
             ''',
         )
 
-        vertices = np.array([
-            -1.0, -1.0, 0.0,
-            -1.0, 1.0, 0.0,
-            1.0, 1.0, 0.0,
-        ], dtype='f4')
+
+        dodecahedron = createDodecahedron()
+        line = dodecahedron.get_cover_line()
+        raw_vertices = []
+        for point in line:
+            for c in point:
+                raw_vertices.append(c)
+        # dodecahedron.get_cover_line
+        vertices = np.array(raw_vertices, dtype='f4')
 
         self.vbo = self.ctx.buffer(vertices.tobytes())
         self.vao = self.ctx.vertex_array(self.prog, [
@@ -63,7 +67,7 @@ class Hello(base.WindowBase):
         perspective = Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
         lookat = Matrix44.look_at(
-            (0, 50, 100),
+            (20, 50, 100),
             (0.0, 0.0, 0.0),
             (0.0, 1.0, 0.0),
             dtype='f4'
@@ -75,7 +79,7 @@ class Hello(base.WindowBase):
         self.prog["mvp"].write(mvp.tobytes())
 
         # self.prog['model'].write(Matrix44.from_eulers((0.0, 0.1, 0.0), dtype='f4'))
-        self.vao.render(mode=moderngl.TRIANGLES)
+        self.vao.render(mode=moderngl.LINES)
         
 
 if __name__ == '__main__':

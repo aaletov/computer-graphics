@@ -6,19 +6,53 @@ import igraph as ig
 VertexLabel = int
 Point = Tuple[float, float, float]
 
-def to_line(graph: ig.Graph) -> list:
-    tree: ig.Graph = graph.spanning_tree()
-    vertices, parents = tree.dfs(0)
-    line = []
-    for i in range(len(vertices)):
-        v, p = vertices[i], parents[i]
-        if len(line) == 0:
-            line.append(v)
-            continue
+# Return sorted left
+# def sort_left(graph: ig.Graph, le: int, re: int) -> Tuple[int, int]:
+#     les, let = graph.es[le].source, graph.es[le].target
+#     res, ret = graph.es[re].source, graph.es[re].target
+#     if (les == res) or (les == ret):
+#         return (let, les)
+#     elif (let == res) or (let == ret):
+#         return (les, let)
+#     else:
+#         raise RuntimeError("edges not related")
 
-        path: list = tree.get_shortest_path(line[-1], v)[1:]
-        line += path
-    return line
+# # Consider left already sorted
+# def sort_right(graph: ig.Graph, les: int, let: int, re: int) -> Tuple[int, int]:
+#     res, ret = graph.es[re].source, graph.es[re].target
+#     # Few extra checks
+#     if (ret == les) or (ret == let):
+#         return (ret, res)
+#     elif (res == les) or (res == let):
+#         return (res, ret)
+#     else:
+#         raise RuntimeError("edges not related")
+
+# def align_edges(graph: ig.Graph, edge_idx: List[int]) -> List[int]:
+#     sorted_list = []
+#     les, let = sort_left(graph, edge_idx[0], edge_idx[1])
+#     for re in edge_idx[1:]:
+#         res, ret = sort_right(graph, les, let, re)
+#         sorted_list += [les, let]
+#         les, let = res, ret
+#     sorted_list += [les, let]
+#     return sorted_list
+
+def to_line(graph: ig.Graph) -> List[Tuple[int, int]]:
+    linegraph: ig.Graph = graph.linegraph()
+    tree: ig.Graph = linegraph.spanning_tree()
+    edges, parents = tree.dfs(0)
+    # edge_line = []
+    # for i in range(len(edges) - 1):
+    #     e, p = edges[i], parents[i]
+    #     if len(edge_line) == 0:
+    #         edge_line.append(e)
+    #         continue
+
+    #     path: list = tree.get_shortest_path(edge_line[-1], e)[1:]
+    #     edge_line += path
+    # return list([(graph.es[e].source, graph.es[e].target) for e in edge_line])
+    return list([(graph.es[e].source, graph.es[e].target) for e in edges])
 
 def to_cartesian(point: Point) -> Point:
   r: float = point[0]
@@ -59,11 +93,15 @@ class Polyhedron:
         cartesian_coords: Dict[VertexLabel, Point] = {}
         for k, v in self.coords.items():
             cartesian_coords[k] = to_cartesian(v)
-        return self.__init__(cartesian_coords, self.graph, is_polar=False)
+        return Polyhedron(cartesian_coords, self.graph, is_polar=False)
 
     def get_cover_line(self) -> List[Point]:
         line = to_line(self.graph)
-        return list([self.coords[v] for v in line])
+        cover_line = []
+        for pair in line:
+            for point in pair:
+                cover_line.append(self.coords[point]) 
+        return cover_line
     
     def get_cover_triangles(self) -> List[Tuple[Point, Point, Point]]:
         triangulized = to_triangulized(self.graph)
@@ -122,29 +160,67 @@ def createDodecahedron() -> Polyhedron:
     BETA = math.acos(math.sqrt(3) / (6 * math.sin(54 * RADIAN_DEGREE)))
 
     polar_coords: Dict[VertexLabel, Point] = {
-        0: (R, (math.pi / 4) + 0*(math.pi / 2), ALPHA),
-        1: (R, (math.pi / 4) + 1*(math.pi / 2), ALPHA),
-        2: (R, (math.pi / 4) + 2*(math.pi / 2), ALPHA),
-        3: (R, (math.pi / 4) + 3*(math.pi / 2), ALPHA),
-        4: (R, (math.pi / 4) + 0 * (math.pi / 2), -ALPHA),
-        5: (R, (math.pi / 4) + 1 * (math.pi / 2), -ALPHA),
-        6: (R, (math.pi / 4) + 2 * (math.pi / 2), -ALPHA),
-        7: (R, (math.pi / 4) + 3 * (math.pi / 2), -ALPHA),
-        8: (R, BETA, 0),
-        9: (R, math.pi - BETA, 0),
-        10: (R, math.pi + BETA, 0),
-        11: (R, -BETA, 0),
-        12: (R, math.pi / 2, BETA),
-        13: (R, math.pi / 2, math.pi - BETA),
-        14: (R, math.pi / 2, math.pi + BETA),
-        15: (R, math.pi / 2, -BETA),
-        16: (R, 2 * math.pi, (math.pi/ 2 - BETA)),
-        17: (R, 2 * math.pi, -(math.pi / 2 - BETA)),
-        18: (R, math.pi, (math.pi / 2 - BETA)),
-        19: (R, math.pi, -(math.pi / 2 - BETA)),
+        # [0, 1, 2, 3, 7, 4, 5, 6, 8, 9, 11, 12, 18, 16, 17, 19, 13, 14, 10, 15]
+        # ['A', 'B', 'C', 'D', 'H', 'E', 'F', 'G', 'I', 'J', 'L', 'M', 'S', 'Q', 'R', 'T', 'N', 'O', 'K', 'P']
+        0: (R, (math.pi / 4) + 0*(math.pi / 2), ALPHA), # A
+        1: (R, (math.pi / 4) + 1*(math.pi / 2), ALPHA), # B
+        2: (R, (math.pi / 4) + 2*(math.pi / 2), ALPHA), # C
+        3: (R, (math.pi / 4) + 3*(math.pi / 2), ALPHA), # D
+        7: (R, (math.pi / 4) + 0 * (math.pi / 2), -ALPHA), # H
+        4: (R, (math.pi / 4) + 1 * (math.pi / 2), -ALPHA), # E
+        5: (R, (math.pi / 4) + 2 * (math.pi / 2), -ALPHA), # F
+        6: (R, (math.pi / 4) + 3 * (math.pi / 2), -ALPHA), # G
+        8: (R, BETA, 0), # I
+        9: (R, math.pi - BETA, 0), # J
+        11: (R, math.pi + BETA, 0), # L
+        12: (R, -BETA, 0), # M
+        18: (R, math.pi / 2, BETA), # S
+        16: (R, math.pi / 2, math.pi - BETA), # Q
+        17: (R, math.pi / 2, math.pi + BETA), # R
+        19: (R, math.pi / 2, -BETA), # T
+        13: (R, 2 * math.pi, (math.pi/ 2 - BETA)), # N
+        14: (R, 2 * math.pi, -(math.pi / 2 - BETA)), # O
+        10: (R, math.pi, (math.pi / 2 - BETA)), # K
+        15: (R, math.pi, -(math.pi / 2 - BETA)), # P
     }
 
     polar_dhedron = Polyhedron(polar_coords, graph)
     cartesian_dhedron = polar_dhedron.to_cartesian()
 
     return cartesian_dhedron
+
+def createCube() -> Polyhedron:
+    graph = ig.Graph(8, edges=[
+        (0, 1),
+        (0, 3),
+        (0, 4),
+        (6, 2),
+        (6, 5),
+        (6, 7),
+        (4, 5),
+        (4, 7),
+        (1, 5),
+        (1, 2),
+        (3, 2),
+        (3, 7),
+    ])
+
+    R = 1.0
+    RADIAN_DEGREE = math.pi / 180
+    ALPHA = math.asin(math.sqrt(2) / math.sqrt(3))
+
+    polar_coords: Dict[VertexLabel, Point] = {
+        0: (R, 5 * math.pi / 4, -ALPHA),
+        1: (R, 3 * math.pi / 4, -ALPHA),
+        2: (R, 1 * math.pi / 4, -ALPHA),
+        3: (R, 7 * math.pi / 4, -ALPHA),
+        4: (R, 5 * math.pi / 4, ALPHA),
+        5: (R, 3 * math.pi / 4, ALPHA),
+        6: (R, 1 * math.pi / 4, ALPHA),
+        7: (R, 7 * math.pi / 4, ALPHA),
+    }
+
+    polar_cube = Polyhedron(polar_coords, graph)
+    cartesian_cube = polar_cube.to_cartesian()
+
+    return cartesian_cube
