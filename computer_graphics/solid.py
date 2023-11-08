@@ -79,6 +79,9 @@ class SolidGraph:
 
         return np.array(triangles).flatten()
     
+    def get_vertices(self) -> np.ndarray[int, int]:
+        return np.array([v.index for v in self.graph.vs])
+    
 class SolidCoordinates:
     def __init__(self, coords: Dict[VertexLabel, Point], is_polar=True):
         self.coords = coords
@@ -125,6 +128,15 @@ class Solid:
     def get_cover_triangles(self) -> np.ndarray[int, int]:
         triangles = self.sgraph.get_cover_triangles()
         return self.to_coordinates(triangles)
+    
+    def get_vertices(self) -> np.ndarray[int, int]:
+        return self.to_coordinates(self.sgraph.get_vertices())
+
+    def get_cover_line_idx(self) -> np.ndarray[int, int]:
+        return self.sgraph.get_cover_line()
+
+    def get_cover_triangles_idx(self) -> np.ndarray[int, int]:
+        return self.sgraph.get_cover_triangles()
 
 
 def createDodecahedron() -> Solid:
