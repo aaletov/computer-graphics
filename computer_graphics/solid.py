@@ -63,8 +63,8 @@ class SolidGraph:
     # Returns 1D ndarray
     def get_cover_triangles(self) -> np.ndarray[int, int]:
         triangles: List[Tuple[int, int, int]] = []
-        for cycle in self.graph.fundamental_cycles():
-            pairs = list([(self.graph.es[e].source, self.graph.es[e].target) for e in cycle])
+        for cycle in self.graph.minimum_cycle_basis():
+            pairs = list([(self.graph.es[e].source, self.graph.es[e].target) for e in cycle[:-1]])
             pairs = SolidGraph.sort_pairs(pairs)
             vertices = [pairs[0][0]] + [pair[1] for pair in pairs]
             pivot = vertices[0]
