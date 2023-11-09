@@ -59,21 +59,28 @@ class SolidGraph:
             le = sorted_re
         sorted_list.append(le)
         return sorted_list
-    
+
     # Returns 1D ndarray
     def get_cover_triangles(self) -> np.ndarray[int, int]:
         triangles: List[Tuple[int, int, int]] = []
-        for cycle in self.graph.minimum_cycle_basis():
-            pairs = list([(self.graph.es[e].source, self.graph.es[e].target) for e in cycle[:-1]])
-            pairs = SolidGraph.sort_pairs(pairs)
-            vertices = [pairs[0][0]] + [pair[1] for pair in pairs]
-            pivot = vertices[0]
-            for i in range(0, len(vertices) - 2):
+
+        for face in self.graph["faces"]:
+            vertices = list(filter(lambda x: face in x["faces"], self.graph.vs))
+            subgraph = self.graph.induced_subgraph(vertices)
+            subpath, _ = subgraph.dfs(subgraph.vs[0].index)
+            path = []
+            for sv in subpath:
+                for v in vertices:
+                    if v["name"] == subgraph.vs[sv]["name"]:
+                        path.append(v.index)
+                        break
+            pivot = path[0]
+            for i in range(0, len(path) - 2):
                 triangles.append(
                     (
                         pivot,
-                        vertices[i + 1],
-                        vertices[i + 2],
+                        path[i + 1],
+                        path[i + 2],
                     )
                 )
 
@@ -210,19 +217,52 @@ def createDodecahedron() -> Solid:
 
 def createCube() -> Solid:
     graph = ig.Graph(8, edges=[
-        (0, 1),
-        (0, 3),
-        (0, 4),
-        (6, 2),
-        (6, 5),
-        (6, 7),
-        (4, 5),
-        (4, 7),
-        (1, 5),
-        (1, 2),
-        (3, 2),
-        (3, 7),
-    ])
+            (0, 1),
+            (0, 3),
+            (0, 4),
+            (6, 2),
+            (6, 5),
+            (6, 7),
+            (4, 5),
+            (4, 7),
+            (1, 5),
+            (1, 2),
+            (3, 2),
+            (3, 7),
+        ],
+        graph_attrs={
+            "faces": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+            ],
+        },
+        vertex_attrs={
+            "name": [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                "F",
+                "G",
+                "H",
+            ],
+            "faces": [
+                [0, 1, 4],
+                [0, 1, 2],
+                [0, 2, 3],
+                [0, 3, 4],
+                [1, 4, 5],
+                [1, 2, 5],
+                [2, 3, 5],
+                [3, 4, 5],
+            ],
+        }
+    )
 
     R = 1.0
     RADIAN_DEGREE = math.pi / 180
