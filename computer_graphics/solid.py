@@ -86,6 +86,32 @@ class SolidGraph:
 
         return np.array(triangles).flatten()
     
+    def get_cover_triangles_tex(self) -> np.ndarray[int, int]:
+        triangles: List[Tuple[int, int, int]] = []
+
+        for face in self.graph["faces"]:
+            vertices = list(filter(lambda x: face in x["faces"], self.graph.vs))
+            subgraph = self.graph.induced_subgraph(vertices)
+            subpath, _ = subgraph.dfs(subgraph.vs[0].index)
+            # indexes = list([v.index for v in vertices])
+            path = []
+            for sv in subpath:
+                for v in vertices:
+                    if v["name"] == subgraph.vs[sv]["name"]:
+                        path.append(sv)
+                        break
+            pivot = path[0]
+            for i in range(0, len(path) - 2):
+                triangles.append(
+                    (
+                        subpath.index(pivot),
+                        subpath.index(path[i + 1]),
+                        subpath.index(path[i + 2]),
+                    )
+                )
+
+        return np.array(triangles).flatten()
+    
     def get_vertices(self) -> np.ndarray[int, int]:
         return np.array([v.index for v in self.graph.vs])
     
@@ -148,37 +174,100 @@ class Solid:
 
 def createDodecahedron() -> Solid:
     graph = ig.Graph(20, edges=[
-        [0, 8],
-        [0, 13],
-        [0, 18],
-        [1, 9],
-        [1, 10],
-        [1, 18],
-        [2, 10],
-        [2, 11],
-        [2, 16],
-        [3, 12],
-        [3, 13],
-        [3, 16],
-        [4, 9],
-        [4, 15],
-        [4, 19],
-        [5, 11],
-        [5, 15],
-        [5, 17],
-        [6, 12],
-        [6, 14],
-        [6, 17],
-        [7, 8],
-        [7, 14],
-        [7, 19],
-        [8, 9],
-        [10, 15],
-        [11, 12],
-        [13, 14],
-        [16, 18],
-        [17, 19],
-    ])
+            [0, 8],
+            [0, 13],
+            [0, 18],
+            [1, 9],
+            [1, 10],
+            [1, 18],
+            [2, 10],
+            [2, 11],
+            [2, 16],
+            [3, 12],
+            [3, 13],
+            [3, 16],
+            [4, 9],
+            [4, 15],
+            [4, 19],
+            [5, 11],
+            [5, 15],
+            [5, 17],
+            [6, 12],
+            [6, 14],
+            [6, 17],
+            [7, 8],
+            [7, 14],
+            [7, 19],
+            [8, 9],
+            [10, 15],
+            [11, 12],
+            [13, 14],
+            [16, 18],
+            [17, 19],
+        ],
+        graph_attrs={
+            "faces": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+            ],
+        },
+        vertex_attrs={
+            "name": [
+                "A", # f1 f5 f10
+                "B", # f4 f6 f10
+                "C", # f3 f6 f9
+                "D", # f2 f5 f9
+                "H", # f1 f8 f12
+                "E", # f4 f7 f12
+                "F", # f3 f7 f11
+                "G", # f2 f8 f11
+                "I", # f1 f10 f12
+                "J", # f4 f10 f12
+                "L", # f3 f9 f11
+                "M", # f2 f9 f11
+                "S", # f5 f6 f10
+                "Q", # f5 f6 f9
+                "R", # f7 f8 f11
+                "T", # f7 f8 f12
+                "N", # f1 f2 f5
+                "O", # f1 f2 f8
+                "K", # f3 f4 f6
+                "P", # f3 f4 f7
+            ],
+            "faces": [
+                [0, 4, 9],
+                [3, 5, 9],
+                [2, 5, 8],
+                [1, 4, 8],
+                [0, 7, 11],
+                [3, 6, 11],
+                [2, 6, 10],
+                [1, 7, 10],
+                [0, 9, 11],
+                [3, 9, 11],
+                [2, 8, 10],
+                [1, 8, 10],
+                [4, 5, 9],
+                [4, 5, 8],
+                [6, 7, 10],
+                [6, 7, 11],
+                [0, 1, 4],
+                [0, 1, 7],
+                [2, 3, 5],
+                [2, 3, 6],
+            ],
+        },
+    )
 
     R = 1.0
     RADIAN_DEGREE = math.pi / 180
@@ -277,6 +366,55 @@ def createCube() -> Solid:
         5: (R, 3 * math.pi / 4, ALPHA),
         6: (R, 1 * math.pi / 4, ALPHA),
         7: (R, 7 * math.pi / 4, ALPHA),
+    }
+
+    scoord = SolidCoordinates(polar_coords).to_cartesian()
+    sgraph = SolidGraph(graph)
+
+    return Solid(sgraph, scoord)
+
+def createTetrahedron() -> Solid:
+    graph = ig.Graph(4, edges=[
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (1, 2),
+            (2, 3),
+            (3, 1),
+        ],
+        graph_attrs={
+            "faces": [
+                0,
+                1,
+                2,
+                3,
+            ],
+        },
+        vertex_attrs={
+            "name": [
+                "D",
+                "A",
+                "B",
+                "C",
+            ],
+            "faces": [
+                [1, 2, 3],
+                [0, 1, 2],
+                [0, 2, 3],
+                [0, 3, 1],
+            ],
+        }
+    )
+
+    R = 1.0
+    RADIAN_DEGREE = math.pi / 180
+    ALPHA = (math.pi / 2) - math.atan(math.sqrt(2))
+
+    polar_coords: Dict[VertexLabel, Point] = {
+        0: (R, 0, math.pi / 2),
+        1: (R, 1 * math.pi / 3, -ALPHA),
+        2: (R, 3 * math.pi / 3, -ALPHA),
+        3: (R, 5 * math.pi / 3, -ALPHA),
     }
 
     scoord = SolidCoordinates(polar_coords).to_cartesian()
