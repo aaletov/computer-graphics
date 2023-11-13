@@ -155,74 +155,49 @@ class TestGetCoverTriangles(unittest.TestCase):
         graph = get_cube_graph()
         line = graph.get_cover_triangles()
         expected = np.array([
-            0, 1, 2,
-            0, 2, 3,
-            0, 1, 5,
-            0, 5, 4,
-            0, 3, 7,
-            0, 7, 4,
-            2, 6, 5,
-            2, 5, 1,
+            0, 3, 2,
+            0, 2, 1,
+            0, 4, 5,
+            0, 5, 1,
+            1, 5, 6,
+            1, 6, 2,
             2, 6, 7,
             2, 7, 3,
+            0, 4, 7,
+            0, 7, 3,
+            4, 7, 6,
+            4, 6, 5,
         ])
-        print(line)
         self.assertTrue(np.equal(expected, line).all())
 
-class TestGetCycles(unittest.TestCase):
+class TestGetCoverTrianglesTex(unittest.TestCase):
     def test_square(self):
         graph = get_square_graph()
-        cycles = graph.get_cycles()
+        line = graph.get_cover_triangles_tex()
         expected = np.array([
-            [0, 1, 2, 3],
+            0, 1, 2,
+            0, 2, 3,
         ])
-        self.assertTrue(np.equal(expected, cycles).all())
+        self.assertTrue(np.equal(expected, line).all())
 
     def test_penta(self):
         graph = get_penta_graph()
-        cycles = graph.get_cycles()
-        expected = np.array([
-            [0, 1, 2, 3, 4],
-        ])
-        self.assertTrue(np.equal(expected, cycles).all())
-
-    def test_cube(self):
-        graph = get_cube_graph()
-        cycles = graph.get_cycles()
+        line = graph.get_cover_triangles_tex()
         expected = np.array([
             0, 1, 2,
             0, 2, 3,
-            0, 1, 5,
-            0, 5, 4,
-            0, 3, 7,
-            0, 7, 4,
-            2, 6, 5,
-            2, 5, 1,
-            2, 6, 7,
-            2, 7, 3,
+            0, 3, 4,
         ])
-        self.assertTrue(np.equal(expected, cycles).all())
+        self.assertTrue(np.equal(expected, line).all())
 
-
-
-# class TestSortPairs(unittest.TestCase):
-#     def test_penta(self):
-#         edges = [
-#             (1, 0),
-#             (1, 2),
-#             (3, 2),
-#             (3, 4),
-#             (4, 0),
-#         ]
-#         expected_edges = [
-#             (0, 1),
-#             (1, 2),
-#             (2, 3),
-#             (3, 4),
-#             (4, 0),
-#         ]
-#         sorted_edges = sort_pairs(edges)
-#         self.assertEqual(sorted_edges, expected_edges)
+    def test_cube(self):
+        graph = get_cube_graph()
+        line = graph.get_cover_triangles_tex()
+        expected = np.array([
+            0, 1, 2,
+            0, 2, 3,
+        ] * 6)
+        self.assertTrue(np.equal(expected, line).all())
 
 if __name__ == '__main__':
     unittest.main()

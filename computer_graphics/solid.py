@@ -355,7 +355,7 @@ def createCube() -> Solid:
 
     R = 1.0
     RADIAN_DEGREE = math.pi / 180
-    ALPHA = math.asin(math.sqrt(2) / math.sqrt(3))
+    ALPHA = math.acos(math.sqrt(2) / math.sqrt(3))
 
     polar_coords: Dict[VertexLabel, Point] = {
         0: (R, 5 * math.pi / 4, -ALPHA),

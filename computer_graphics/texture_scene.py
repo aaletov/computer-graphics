@@ -69,15 +69,11 @@ class TextureScene(WindowBase):
             0.5, 1.0, # 2
             0.02, 0.65, # 3
             0.2, 0.1, # 4
-            # 0.79, 0.1, # 0
-            # 0.5, 1.0, # 2
-            # 0.79, 0.1, # 0
-            # 0.02, 0.65, # 3
         ], dtype='f4')
 
         self.models: List[BaseModel] = [
-            # DumbModel(self.ctx, self.prog, createTetrahedron(), tt_vertex_tex),
-            # DumbModel(self.ctx, self.prog, createCube(), cube_vertex_tex),
+            DumbModel(self.ctx, self.prog, createTetrahedron(), tt_vertex_tex),
+            DumbModel(self.ctx, self.prog, createCube(), cube_vertex_tex),
             DumbModel(self.ctx, self.prog, createDodecahedron(), dd_vertex_tex),
         ]
 
@@ -114,7 +110,7 @@ class TextureScene(WindowBase):
 
         self.prog["rot"].write(pyrr.Matrix44.from_x_rotation(time, dtype='f4').tobytes())
         for model, x in zip(self.models, np.linspace(-0.5, 0.5, len(self.models))):
-            model_matrix = pyrr.Matrix44.from_translation(np.array([0.0, 0.0, -1.9]), dtype='f4')
+            model_matrix = pyrr.Matrix44.from_translation(np.array([x, 0.0, -1.9]), dtype='f4')
             model.render(model_matrix)
 
 class BaseModel:
