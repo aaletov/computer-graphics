@@ -128,7 +128,7 @@ class DumbModel(BaseModel):
         vertices = solid.get_cover_triangles()
         f = lambda x: (0.1, 0.1, 0.1, 0.5) if x % 2 == 0 else (0.75, 0.09, 0.03, 0.5)
         # colors = np.array([f(i) for i in range(indexes.shape[0])])
-        tex_indexes = solid.sgraph.get_cover_triangles_tex()
+        tex_indexes = solid.get_cover_triangles_tex()
 
         tex_coords = [(texmap[2 * i], texmap[2 * i + 1]) for i in tex_indexes]
         tex = np.array(tex_coords, dtype="f4").flatten()
