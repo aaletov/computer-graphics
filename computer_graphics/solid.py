@@ -4,6 +4,7 @@ import numpy as np
 import pyrr
 from numpy.typing import NDArray
 import igraph as ig
+from .revolution import Axis, create_revolution_graph
 
 
 VertexLabel = int
@@ -386,3 +387,40 @@ def createTetrahedron() -> Solid:
     ])
 
     return Solid(graph).to_cartesian()
+
+def createCone() -> Solid:
+    line = [
+        pyrr.Vector3((0.0, 1.0, 0.0)),
+        pyrr.Vector3((1.0, 0.0, 0.0)),
+    ]
+    graph = create_revolution_graph(line, axis=Axis.Y)
+    new_idx = [0] * graph["pieces"] + [i + 1 for i in range(graph["pieces"])]
+    
+    attr_num = 0
+    def combinator(values: List[Any]) -> List[Any]:
+        nonlocal attr_num
+        if len(values) == 1:
+            return values[0]
+        if attr_num == 1: # faces
+            faces = set()
+            for farr in values:
+                subset = set(farr)
+                faces |= subset
+            values = list(faces)
+        else:
+            values = values[0]
+        attr_num += 1
+        return values
+
+    graph.contract_vertices(new_idx, combine_attrs=combinator)
+    
+    del_edges = []
+    for e in graph.es:
+        if e.source == e.target:
+            del_edges.append(e.index)
+    graph.delete_edges(del_edges)
+    
+    tt = list([e for e in graph.es])
+    ttt = list([v for v in graph.vs])
+
+    return Solid(graph, is_polar=False)
