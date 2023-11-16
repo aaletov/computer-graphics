@@ -154,7 +154,17 @@ class Solid:
     def get_vertices(self) -> np.ndarray[int, int]:
         vs = np.array([v.index for v in self.graph.vs])
         return self.to_coordinates(vs)
-
+    
+    def get_normales(self) -> np.ndarray[int, int]:
+        triangles = self.get_cover_triangles()
+        triangles = triangles.reshape((triangles.shape[0] // (3 * 3), 3, 3))
+        normales = [0] * (3 * triangles.shape[0])
+        for i, triangle in enumerate(triangles):
+            index: np.ndarray = triangle[2]
+            mid: np.ndarray = triangle[1]
+            for j in range(3):
+                normales[3 * i + j] = np.cross(index, mid)
+        return np.array(normales).flatten()
 
 def createDodecahedron() -> Solid:
     graph = ig.Graph(graph_attrs={
