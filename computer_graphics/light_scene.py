@@ -41,6 +41,7 @@ class LightScene(WindowBase):
 
                 uniform vec3 lightColor;
                 uniform vec3 lightPos;
+                uniform vec3 viewPos;
                 
                 in vec3 fObjectColor;
                 in vec3 Normal;
@@ -50,14 +51,22 @@ class LightScene(WindowBase):
 
                 void main()
                 {
-                    float ambientStrength = 0.5;
+                    float ambientStrength = 0.1;
                     vec3 ambient = ambientStrength * lightColor;
+
                     vec3 norm = normalize(Normal);
                     vec3 lightDir = normalize(lightPos - FragPos);
+
+                    float specularStrength = 1.0;
+                    vec3 viewDir = normalize(viewPos - FragPos);
+                    vec3 reflectDir = reflect(-lightDir, norm);
+                    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+                    vec3 specular = specularStrength * spec * lightColor;  
+
                     float diff = max(dot(norm, lightDir), 0.0);
                     vec3 diffuse = diff * lightColor;
 
-                    vec3 result = (ambient + diffuse) * fObjectColor;
+                    vec3 result = (ambient + diffuse + specular) * fObjectColor;
                     FragColor = vec4(result, 1.0);
                 }  
             ''',
@@ -80,8 +89,10 @@ class LightScene(WindowBase):
 
         perspective = pyrr.Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
+        
+        cameraPos = (0, 0, 150)
         lookat = pyrr.Matrix44.look_at(
-            (20, 20, 150),
+            cameraPos,
             (0.0, 0.0, 0.0),
             (0.0, 1.0, 0.0),
             dtype='f4'
@@ -90,7 +101,8 @@ class LightScene(WindowBase):
         vp = perspective * lookat
         self.prog["vp"].write(vp.tobytes())
         self.prog["lightColor"].write(np.array([1.0, 1.0, 1.0, 1.0], dtype='f4').tobytes())
-        self.prog["lightPos"].write(np.array([0.0, 1.0, 1.0, 1.0], dtype='f4').tobytes())
+        self.prog["lightPos"].write(np.array([-0.5, 0.0, 1.0, 1.0], dtype='f4').tobytes())
+        self.prog["viewPos"].write(np.array(cameraPos, dtype='f4').tobytes())
 
         rot = pyrr.Matrix44.from_x_rotation(time, dtype='f4')
         for model, x in zip(self.models, np.linspace(-1.5, 1.5, len(self.models))):
@@ -111,7 +123,9 @@ class DumbModel(BaseModel):
         self.prog = program
 
         vertices = solid.get_cover_triangles()
-        colors = np.array([(0.75, 0.09, 0.03) for i in range(vertices.shape[0] // 3)]).flatten()
+        red = (0.75, 0.09, 0.03)
+        black = (0.1, 0.1, 0.1)
+        colors = np.array([red for i in range(vertices.shape[0] // 3)]).flatten()
         normales = solid.get_normales_repeated()
 
         self.vbo = self.ctx.buffer(vertices.astype('f4').tobytes())
