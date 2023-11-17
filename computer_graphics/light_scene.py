@@ -24,17 +24,16 @@ class LightScene(WindowBase):
 
                 uniform mat4 model;
                 uniform mat4 vp;
-                uniform mat4 rot;
 
                 out vec3 fObjectColor;
                 out vec3 Normal;
                 out vec3 FragPos; 
 
                 void main(void) {
-                    gl_Position = model * vp * rot * vec4(aVertexPosition, 1.0);
-                    FragPos = vec3(model * rot * vec4(aVertexPosition, 1.0));
+                    gl_Position = vp * model * vec4(aVertexPosition, 1.0);
+                    FragPos = vec3(model * vec4(aVertexPosition, 1.0));
                     fObjectColor = aObjectColor;
-                    Normal = aNormal;
+                    Normal = mat3(transpose(inverse(model))) * aNormal; 
                 }
             ''',
             fragment_shader='''
@@ -93,9 +92,10 @@ class LightScene(WindowBase):
         self.prog["lightColor"].write(np.array([1.0, 1.0, 1.0, 1.0], dtype='f4').tobytes())
         self.prog["lightPos"].write(np.array([0.0, 1.0, 1.0, 1.0], dtype='f4').tobytes())
 
-        self.prog["rot"].write(pyrr.Matrix44.from_x_rotation(time, dtype='f4').tobytes())
-        for model, x in zip(self.models, np.linspace(-0.5, 0.5, len(self.models))):
-            model_matrix = pyrr.Matrix44.from_translation(np.array([x, 0.0, -1.0]), dtype='f4')
+        rot = pyrr.Matrix44.from_x_rotation(time, dtype='f4')
+        for model, x in zip(self.models, np.linspace(-1.5, 1.5, len(self.models))):
+            trans = pyrr.Matrix44.from_translation(np.array([x, 0.0, -1.0]), dtype='f4')
+            model_matrix = trans * rot
             model.render(model_matrix)
 
 class BaseModel:
@@ -111,13 +111,13 @@ class DumbModel(BaseModel):
         self.prog = program
 
         vertices = solid.get_cover_triangles()
-        f = lambda x: (0.75, 0.09, 0.03)
-        colors = np.array([f(i) for i in range(vertices.shape[0] // 3)]).flatten()
-        normales = solid.get_normales()
+        colors = np.array([(0.75, 0.09, 0.03) for i in range(vertices.shape[0] // 3)]).flatten()
+        normales = solid.get_normales_repeated()
 
         self.vbo = self.ctx.buffer(vertices.astype('f4').tobytes())
         self.cbo = self.ctx.buffer(colors.astype('f4').tobytes())
         self.nbo = self.ctx.buffer(normales.astype('f4').tobytes())
+
         self.vao = self.ctx.vertex_array(self.prog, [
                 (self.vbo, '3f', 'aVertexPosition'),
                 (self.cbo, '3f', 'aObjectColor'),

@@ -155,16 +155,34 @@ class Solid:
         vs = np.array([v.index for v in self.graph.vs])
         return self.to_coordinates(vs)
     
+    @classmethod
+    def angle(cls, x: np.array, y: np.array) -> float:
+        xn = x / np.linalg.norm(x)
+        yn = y / np.linalg.norm(y)
+        return np.arccos(np.clip(np.dot(xn, yn), -1.0, 1.0))
+    
     def get_normales(self) -> np.ndarray[int, int]:
         triangles = self.get_cover_triangles()
         triangles = triangles.reshape((triangles.shape[0] // (3 * 3), 3, 3))
-        normales = [0] * (3 * triangles.shape[0])
+        normales = [0] * triangles.shape[0]
         for i, triangle in enumerate(triangles):
-            index: np.ndarray = triangle[2]
-            mid: np.ndarray = triangle[1]
-            for j in range(3):
-                normales[3 * i + j] = np.cross(index, mid)
+            index: np.ndarray = np.subtract(triangle[2], triangle[1])
+            mid: np.ndarray = np.subtract(triangle[1], triangle[0])
+            normal_vec = np.cross(index, mid)
+            # le costile begin
+            zero = np.array([0.0, 0.0, 0.0])
+            center_vec = np.average(triangle,axis=0) - zero
+            if Solid.angle(normal_vec, center_vec) > (math.pi / 2):
+                normal_vec = - normal_vec
+                # pass
+            normales[i] = normal_vec
         return np.array(normales).flatten()
+    
+    def get_normales_repeated(self) -> np.ndarray[int, int]:
+        normales = self.get_normales()
+        normales = normales.reshape((normales.shape[0] // 3, 3))
+        normales = np.repeat(normales, repeats=3, axis=0)
+        return normales.flatten()
 
 def createDodecahedron() -> Solid:
     graph = ig.Graph(graph_attrs={
