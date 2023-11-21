@@ -8,7 +8,7 @@ import moderngl as mgl
 
 from .base import WindowBase
 from .solid import Solid, createCone, createDodecahedron, createCube
-from .material import Material, BLACK_RUBBER, GOLD, RED_PLASTIC
+from .material import Material, BLACK_RUBBER, GOLD, RED_PLASTIC, PEARL_GLASS, SHINY_GOLD
 
 class MaterialScene(WindowBase):
     title = 'Hello Program'
@@ -44,6 +44,7 @@ class MaterialScene(WindowBase):
                     vec3 diffuse;
                     vec3 specular;
                     float shininess;
+                    float transparency;
                 }; 
                 
                 uniform Material material;
@@ -81,20 +82,24 @@ class MaterialScene(WindowBase):
                     vec3 specular = light.specular * (spec * material.specular);
 
                     vec3 result = ambient + diffuse + specular;
-                    FragColor = vec4(result, 1.0);
+                    FragColor = vec4(result, material.transparency);
                 }  
             ''',
         )
 
         self.models: List[BaseModel] = [
-            DumbModel(self.ctx, self.prog, createCone(), BLACK_RUBBER),
-            DumbModel(self.ctx, self.prog, createCube(), RED_PLASTIC),
-            DumbModel(self.ctx, self.prog, createDodecahedron(), GOLD),
+            DumbModel(self.ctx, self.prog, createCone(), SHINY_GOLD),
+            DumbModel(self.ctx, self.prog, createCube(), PEARL_GLASS),
+            DumbModel(self.ctx, self.prog, createDodecahedron(), BLACK_RUBBER),
         ]
+
+        self.room = DumbModel(self.ctx, self.prog, createCube(), RED_PLASTIC)
 
 
     def render(self, time: float, frame_time: float):
         self.ctx.enable(mgl.DEPTH_TEST)
+        self.ctx.enable(mgl.BLEND)
+
         self.ctx.clear(0.0, 0.0, 0.0, 0.0)
 
         fieldOfView = (90 * math.pi) / 180 # in radians
@@ -105,7 +110,7 @@ class MaterialScene(WindowBase):
         perspective = pyrr.Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
         
-        cameraPos = (0, 0, 200)
+        cameraPos = (0, 200, 200)
         lookat = pyrr.Matrix44.look_at(
             cameraPos,
             (0.0, 0.0, 0.0),
@@ -136,15 +141,19 @@ class MaterialScene(WindowBase):
             self.prog["light.specular"].write(material[3])
 
         light = new_light_source(
-            (0.0, 0.5, 20.0),
+            (0.0, 20.0, 20.0),
             (0.2, 0.2, 0.2),
             (0.5, 0.5, 0.5),
             (0.9, 0.9, 0.9),
         )
 
         write_light_source(light)
+        room_scale = pyrr.Matrix44.from_scale(np.array([50.0, 50.0, 50.0]), dtype='f4')
+        room_trans = pyrr.Matrix44.from_translation(np.array([0.0, -30.0, 0.0]), dtype='f4')
+        self.room.render(room_trans * room_scale)
 
-        rot = pyrr.Matrix44.from_x_rotation(time, dtype='f4')
+        rotY = pyrr.Matrix44.from_y_rotation(time % (2 * math.pi), dtype='f4')
+        rot = rotY * pyrr.Matrix44.from_z_rotation(time % (2 * math.pi), dtype='f4')
         for model, x in zip(self.models, np.linspace(-3.0, 3.0, len(self.models))):
             trans = pyrr.Matrix44.from_translation(np.array([x, 0.0, -1.0]), dtype='f4')
             model_matrix = trans * rot
@@ -185,13 +194,15 @@ class DumbModel(BaseModel):
             "material.ambient",
             "material.diffuse",
             "material.specular",
-            "material.shininess"
+            "material.shininess",
+            "material.transparency",
         ]
         values = [
             struct.pack("3f", *tuple(self.material.ambient)),
             struct.pack("3f", *tuple(self.material.diffuse)),
             struct.pack("3f", *tuple(self.material.specular)),
             struct.pack("f", self.material.shininess),
+            struct.pack("f", self.material.transparency),
         ]
         for k, v in zip(keys, values):
             self.prog[k].write(v)
