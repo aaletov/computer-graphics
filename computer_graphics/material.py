@@ -33,10 +33,26 @@ GOLD = Material(
     1.0,
 )
 
+SILVER = Material(
+    pyrr.Vector3((0.19225, 0.19225, 0.19225), dtype='f4'),
+    pyrr.Vector3((0.50754, 0.50754, 0.50754), dtype='f4'),
+    pyrr.Vector3((0.508273, 0.508273, 0.508273), dtype='f4'),
+    0.4,
+    1.0,
+)
+
+DIM_SILVER = Material(
+    pyrr.Vector3((0.19225, 0.19225, 0.19225), dtype='f4'),
+    pyrr.Vector3((0.50754, 0.50754, 0.50754), dtype='f4'),
+    pyrr.Vector3((0.0, 0.0, 0.0), dtype='f4'),
+    0.4,
+    1.0,
+)
+
 SHINY_GOLD = Material(
     pyrr.Vector3((0.24725, 0.1995, 0.0745), dtype='f4'),
     pyrr.Vector3((0.75164, 0.60648, 0.22648), dtype='f4'),
-    pyrr.Vector3((0.628281, 0.555802, 0.366065), dtype='f4'),
+    pyrr.Vector3((1.0, 1.0, 1.0), dtype='f4'),
     1.0,
     1.0,
 )
@@ -69,6 +85,22 @@ PEARL_GLASS = Material(
     pyrr.Vector3((0.25, 0.20725, 0.20725), dtype='f4'),
     pyrr.Vector3((1, 0.829, 0.829), dtype='f4'),
     pyrr.Vector3((0.296648, 0.296648, 0.296648), dtype='f4'),
+    0.088,
+    0.3,
+)
+
+DIM_PEARL = Material(
+    pyrr.Vector3((0.25, 0.20725, 0.20725), dtype='f4'),
+    pyrr.Vector3((1, 0.829, 0.829), dtype='f4'),
+    pyrr.Vector3((0.0, 0.0, 0.0), dtype='f4'),
+    0.088,
+    1.0,
+)
+
+DIM_PEARL_GLASS = Material(
+    pyrr.Vector3((0.25, 0.20725, 0.20725), dtype='f4'),
+    pyrr.Vector3((1, 0.829, 0.829), dtype='f4'),
+    pyrr.Vector3((0.0, 0.0, 0.0), dtype='f4'),
     0.088,
     0.3,
 )
