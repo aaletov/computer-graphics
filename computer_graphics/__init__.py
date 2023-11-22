@@ -5,4 +5,6 @@ from .texture_scene import *
 from .advanced_material_scene import *
 from .light_scene import *
 from .material_scene import *
+from .moving_scene import *
+from .advanced_moving_scene import *
 from .base import *

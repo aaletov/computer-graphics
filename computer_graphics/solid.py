@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Any, List
+from typing import Dict, Tuple, Any, List, Iterable
 import math
 import numpy as np
 import pyrr
@@ -13,6 +13,7 @@ class Solid:
     def __init__(self, graph: ig.Graph, is_polar=True) -> None:
         self.graph = graph
         self.is_polar = is_polar
+        self.zero = pyrr.Vector3((0.0, 0.0, 0.0), dtype='f4')
 
     def to_coordinates(self, arr: np.ndarray[int, int]) -> np.ndarray[int, int]:
         oarr = np.ndarray(shape=(3 * arr.shape[0],))
@@ -161,20 +162,35 @@ class Solid:
         yn = y / np.linalg.norm(y)
         return np.arccos(np.clip(np.dot(xn, yn), -1.0, 1.0))
     
+    @classmethod
+    def clockwise_angle(cls, x: np.array, y: np.array) -> float:
+        xn = x / np.linalg.norm(x)
+        yn = y / np.linalg.norm(y)
+        dot = np.dot(xn, yn)
+        det = xn[0] * yn[2] - yn[0] * xn[2]      # Determinant
+        angle = math.atan2(det, dot)  # atan2(y, x) or atan2(sin, cos)
+        return angle
+    
+    def get_normal(self, points: np.ndarray) -> np.ndarray:
+        if points.shape != (3, 3):
+            raise RuntimeError(f"Invalid shape {points.shape}")
+        
+        index: np.ndarray = np.subtract(points[2], points[1])
+        mid: np.ndarray = np.subtract(points[1], points[0])
+        normal_vec = np.cross(index, mid)
+        # le costile begin
+        center_vec = np.average(points, axis=0) - self.zero
+        if Solid.angle(normal_vec, center_vec) > (math.pi / 2):
+            normal_vec = - normal_vec
+        # le costile end
+        return normal_vec
+    
     def get_normales(self) -> np.ndarray[int, int]:
         triangles = self.get_cover_triangles()
         triangles = triangles.reshape((triangles.shape[0] // (3 * 3), 3, 3))
         normales = [0] * triangles.shape[0]
         for i, triangle in enumerate(triangles):
-            index: np.ndarray = np.subtract(triangle[2], triangle[1])
-            mid: np.ndarray = np.subtract(triangle[1], triangle[0])
-            normal_vec = np.cross(index, mid)
-            # le costile begin
-            zero = np.array([0.0, 0.0, 0.0])
-            center_vec = np.average(triangle,axis=0) - zero
-            if Solid.angle(normal_vec, center_vec) > (math.pi / 2):
-                normal_vec = - normal_vec
-                # pass
+            normal_vec = self.get_normal(triangle)
             normales[i] = normal_vec
         return np.array(normales).flatten()
     
@@ -183,6 +199,23 @@ class Solid:
         normales = normales.reshape((normales.shape[0] // 3, 3))
         normales = np.repeat(normales, repeats=3, axis=0)
         return normales.flatten()
+    
+    def get_common_edge(self, lface_idx: int, rface_idx: int) -> Tuple[int, int]:
+        f = lambda v: (lface_idx in v["faces"]) and (rface_idx in v["faces"])
+        vertices = filter(f, self.graph.vs)
+        return tuple(v.index for v in vertices)
+    
+    def get_face_normal(self, face_idx: int) -> pyrr.Vector3:
+        f = lambda v: face_idx in v["faces"]
+        vertices = list(filter(f, self.graph.vs))
+        coords = self.to_coordinates(np.array([v.index for v in vertices[0:3]])).reshape((3, 3))
+        return self.get_normal(coords)
+    
+    def transform(self, matrix: pyrr.Matrix44) -> None:
+        for v in self.graph.vs:
+            v["coord"] = matrix * v["coord"]
+        self.zero = matrix * self.zero
+        return
 
 def createDodecahedron() -> Solid:
     graph = ig.Graph(graph_attrs={
