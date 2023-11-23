@@ -165,9 +165,12 @@ class AdvancedMaterialScene(WindowBase):
                 r * np.sin(phi),
             ), dtype='f4')
 
+        def get_light_ambient(phi: float) -> np.ndarray:
+            return np.roll(np.array((3 * np.sin(phi / 5), 0.0, 0.0)), int(phi // 0.5))
+
         light = new_light_source(
             get_light_position(time % (2 * math.pi)),
-            (1.0, 1.0, 1.0),
+            get_light_ambient(time % (2 * math.pi)),
             (0.9, 0.9, 0.9),
             (0.9, 0.9, 0.9),
         )

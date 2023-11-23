@@ -137,7 +137,7 @@ class AdvancedMovingScene(WindowBase):
         perspective = pyrr.Matrix44.perspective_projection(fieldOfView, 
                                                             aspect, zNear, zFar, dtype='f4')
         
-        cameraPos = (1, 300, 1)
+        cameraPos = (1, 50, 200)
         lookat = pyrr.Matrix44.look_at(
             cameraPos,
             (1.0, 0.0, 0.0),
