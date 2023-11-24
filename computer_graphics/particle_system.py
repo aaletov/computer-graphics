@@ -79,10 +79,15 @@ class ParticleScene(WindowBase):
         )
 
         snowflake_texture = self.load_texture_2d('/home/aaletov/uni/7sem/computer-graphics/snowflake.png')
-        antiat = AntiAttractor(pyrr.Vector3(np.array([-2.0, 10.0, 1.0]), dtype='f4'), 1e-3)
+        antiat = AntiAttractor(pyrr.Vector3(np.array([-2.0, 2.0, 2.0]), dtype='f4'), 1e+8)
         cone = createCone()
         cil = createCilinder()
         cube = createCube()
+        anticube = createCube()
+
+        anticube_scale = pyrr.Matrix44.from_scale(np.array([0.2, 0.2, 0.2]), dtype='f4')
+        anticube_trans = pyrr.Matrix44.from_translation(np.array([-2.0, 2.0, 6.0]), dtype='f4')
+        anticube.transform(anticube_trans * anticube_scale)
 
         cil_scale = pyrr.Matrix44.from_scale(np.array([0.4, 1.0, 0.4]), dtype='f4')
         cil_rot_z = pyrr.Matrix44.from_z_rotation(math.pi / 2, dtype='f4')
@@ -94,6 +99,7 @@ class ParticleScene(WindowBase):
         self.particle_system = ParticleSystem(self.ctx, self.particle_prog, 
                                               snowflake_texture, cone, cube, antiat)
 
+        self.anticube = DumbModel(self.ctx, self.solid_prog, anticube)
         self.emitter = DumbModel(self.ctx, self.solid_prog, cone)
         self.collider = DumbModel(self.ctx, self.solid_prog, cil)
 
@@ -120,6 +126,7 @@ class ParticleScene(WindowBase):
         self.solid_prog["mvp"].write(mvp.tobytes())
         self.particle_prog["mvp"].write(mvp.tobytes())
         self.particle_prog["emmiterPos"].write(np.array([0.0, 0.0, 0.0], dtype='f4').tobytes())
+        self.anticube.render()
         self.emitter.render()
         self.collider.render()
         self.particle_system.tick()
@@ -145,7 +152,9 @@ class Particle:
             self.velocity = - self.velocity
         self.coord = self.coord + self.velocity
         self.velocity = self.velocity + self.acceleration
-        self.acceleration = - (self.mass + self.antiat.mass) / np.power(self.coord - self.antiat.coord, 2)
+        antivector = self.coord - self.antiat.coord
+        antivector = antivector / np.power(np.linalg.norm(antivector), 3)
+        self.acceleration = self.mass * self.antiat.mass * antivector
 
 
 class ParticleSystem:
@@ -158,7 +167,7 @@ class ParticleSystem:
         self.collider = collider
         self.antiat = antiat
         self.mass = 1e-9
-        self.starting_velocity = 1e-1
+        self.starting_velocity = 0.2
         self.particles: List[Particle] = []
         self.max_age = 50
 
