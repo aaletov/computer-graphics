@@ -8,4 +8,5 @@ from .material_scene import *
 from .cube_moving_scene import *
 from .advanced_moving_scene import *
 from .dodecahedron_moving_scene import *
+from .particle_system import *
 from .base import *

@@ -10,10 +10,11 @@ from .revolution import Axis, create_revolution_graph
 VertexLabel = int
     
 class Solid:
-    def __init__(self, graph: ig.Graph, is_polar=True) -> None:
+    def __init__(self, graph: ig.Graph, is_polar=True, hitbox=None) -> None:
         self.graph = graph
         self.is_polar = is_polar
         self.zero = pyrr.Vector3((0.0, 0.0, 0.0), dtype='f4')
+        self.hitbox: Solid | None = hitbox
 
     def to_coordinates(self, arr: np.ndarray[int, int]) -> np.ndarray[int, int]:
         oarr = np.ndarray(shape=(3 * arr.shape[0],))
@@ -215,7 +216,20 @@ class Solid:
         for v in self.graph.vs:
             v["coord"] = matrix * v["coord"]
         self.zero = matrix * self.zero
+        if self.hitbox is not None:
+            self.hitbox.transform(matrix)
         return
+    
+    def is_in(self, point: pyrr.Vector3) -> bool:
+        if not self.is_cube:
+            raise RuntimeError("Not a cube")
+        distances = []
+        for v in self.graph.vs:
+            coord = v["coord"]
+            distances.append(np.linalg.norm(point - coord))
+        diag = 2 * np.linalg.norm(self.graph.vs[0]["coord"] - self.zero)
+        return all(dist < diag for dist in distances)
+            
 
 def createDodecahedron() -> Solid:
     graph = ig.Graph(graph_attrs={
@@ -404,7 +418,9 @@ def createCube() -> Solid:
         (3, 7),
     ])
 
-    return Solid(graph).to_cartesian()
+    solid = Solid(graph).to_cartesian()
+    solid.is_cube = True
+    return solid 
 
 def createTetrahedron() -> Solid:
     graph = ig.Graph(graph_attrs={
@@ -481,7 +497,14 @@ def createCone() -> Solid:
             del_edges.append(e.index)
     graph.delete_edges(del_edges)
     
-    tt = list([e for e in graph.es])
-    ttt = list([v for v in graph.vs])
-
     return Solid(graph, is_polar=False)
+
+def createCilinder() -> Solid:
+    line = [
+        pyrr.Vector3((1.0, 1.0, 0.0)),
+        pyrr.Vector3((1.0, 0.0, 0.0)),
+    ]
+    graph = create_revolution_graph(line, axis=Axis.Y)
+    new_idx = [0] * graph["pieces"] + [i + 1 for i in range(graph["pieces"])]
+
+    return Solid(graph, is_polar=False, hitbox=createCube())
